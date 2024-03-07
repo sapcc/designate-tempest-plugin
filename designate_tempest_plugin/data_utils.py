@@ -259,3 +259,11 @@ def make_rand_recordset(zone_name, record_type):
 
     func = globals()["rand_{}_recordset".format(record_type.lower())]
     return func(zone_name)
+
+
+def rand_serial():
+    """Generate a random zone name
+    :return: a random serial
+    :rtype: string
+    """
+    return str(random.randint(1, 4294967295))
