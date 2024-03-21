@@ -23,7 +23,7 @@ class ZonesClient(base.DnsClientV2Base):
 
     @base.handle_errors
     def create_zone(self, name=None, email=None, ttl=None, description=None,
-                    wait_until=False, params=None):
+                    wait_until=False, serial=None, params=None):
         """Create a zone with the specified parameters.
 
         :param name: The name of the zone.
@@ -34,6 +34,8 @@ class ZonesClient(base.DnsClientV2Base):
             Default: Random Value
         :param description: A description of the zone.
             Default: Random Value
+        :param serial: A serial of the zone.
+            Default: Random Value
         :param wait_until: Block until the zone reaches the desiered status
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
@@ -42,6 +44,7 @@ class ZonesClient(base.DnsClientV2Base):
         zone = {
             'name': name or dns_data_utils.rand_zone_name(prefix='testdomain'),
             'email': email or dns_data_utils.rand_email(),
+            'serial': serial or dns_data_utils.rand_serial(),
             'ttl': ttl or dns_data_utils.rand_ttl(),
             'description': description or data_utils.rand_name('test-zone'),
         }
@@ -92,7 +95,7 @@ class ZonesClient(base.DnsClientV2Base):
 
     @base.handle_errors
     def update_zone(self, uuid, email=None, ttl=None,
-                    description=None, wait_until=False, params=None):
+                    description=None, serial=None, wait_until=False, params=None):
         """Update a zone with the specified parameters.
         :param uuid: The unique identifier of the zone.
         :param email: The email for the zone.
@@ -100,6 +103,8 @@ class ZonesClient(base.DnsClientV2Base):
         :param ttl: The ttl for the zone.
             Default: Random Value
         :param description: A description of the zone.
+            Default: Random Value
+        :param serial: A serial of the zone.
             Default: Random Value
         :param wait_until: Block until the zone reaches the desiered status
         :param params: A Python dict that represents the query paramaters to
@@ -110,6 +115,7 @@ class ZonesClient(base.DnsClientV2Base):
             'email': email or dns_data_utils.rand_email(),
             'ttl': ttl or dns_data_utils.rand_ttl(),
             'description': description or data_utils.rand_name('test-zone'),
+            'serial': serial or dns_data_utils.rand_serial(),
         }
 
         resp, body = self._update_request('zones', uuid, zone, params=params)

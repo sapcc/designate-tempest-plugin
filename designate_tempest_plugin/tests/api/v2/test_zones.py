@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 from oslo_log import log as logging
+from oslo_utils import timeutils
 from tempest.lib import decorators
 from tempest.lib import exceptions as lib_exc
 from tempest.lib.common.utils import data_utils
@@ -116,6 +117,88 @@ class ZonesTest(BaseZonesTest):
 
         self.assertRaises(lib_exc.NotFound,
             lambda: self.client.get(uri))
+
+    @decorators.idempotent_id('b58b3086-a575-49d9-9379-92de88097742')
+    def test_create_zone_serial_yyyymmddss(self):
+        serial = 2024080201
+        LOG.info('Create a zone')
+        _, zone = self.client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Ensure we respond with a right serial')
+        self.assertEqual(serial, zone['serial'])
+
+    @decorators.idempotent_id('5b288927-42b3-4c2d-b0b5-29a8092eaa01')
+    def test_create_zone_serial_unixtime(self):
+        serial = 1369550494
+        _, zone = self.client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Ensure we respond with a right serial')
+        self.assertEqual(serial, zone['serial'])
+
+    @decorators.idempotent_id('4779dea3-0591-4219-a1d8-6581f907ecb1')
+    def test_create_zone_serial_number(self):
+        serial = 1234567
+        _, zone = self.client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Ensure we respond with a right serial')
+        self.assertEqual(serial, zone['serial'])
+
+    @decorators.idempotent_id('757c5bd3-2d25-4242-9eac-45528828411f')
+    def test_update_zone_serial_to_yyyymmddss(self):
+        serial = timeutils.utcnow()
+        LOG.info('Create a zone')
+        _, zone = self.client.create_zone(serial=dns_data_utils.rand_serial())
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Update the zone')
+        _, zone = self.client.update_zone(
+            zone['id'], serial=serial)
+
+        LOG.info('Ensure we respond with UPDATE+PENDING')
+        self.assertEqual('UPDATE', zone['action'])
+        self.assertEqual('PENDING', zone['status'])
+
+        LOG.info('Ensure we respond with updated values')
+        self.assertEqual(serial, zone['serial'])
+
+    @decorators.idempotent_id('4283f440-990e-4097-9a92-7f8aa1638630')
+    def test_update_zone_serial_to_unixtime(self):
+        serial = 1708636627
+        LOG.info('Create a zone')
+        _, zone = self.client.create_zone(serial=dns_data_utils.rand_serial())
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Update the zone')
+        _, zone = self.client.update_zone(
+            zone['id'], serial=serial)
+
+        LOG.info('Ensure we respond with UPDATE+PENDING')
+        self.assertEqual('UPDATE', zone['action'])
+        self.assertEqual('PENDING', zone['status'])
+
+        LOG.info('Ensure we respond with updated values')
+        self.assertEqual(serial, zone['serial'])
+
+    @decorators.idempotent_id('b4ef30c2-823f-47ca-9ef2-84348a77818c')
+    def test_update_zone_serial_to_number(self):
+        serial = dns_data_utils.rand_serial()
+        LOG.info('Create a zone')
+        _, zone = self.client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Update the zone')
+        _, zone = self.client.update_zone(
+            zone['id'], serial=str(int(serial) + 1))
+
+        LOG.info('Ensure we respond with UPDATE+PENDING')
+        self.assertEqual('UPDATE', zone['action'])
+        self.assertEqual('PENDING', zone['status'])
+
+        LOG.info('Ensure we respond with updated values')
+        self.assertEqual(serial, zone['serial'])
 
 
 class ZonesAdminTest(BaseZonesTest):
