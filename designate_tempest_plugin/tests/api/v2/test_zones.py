@@ -228,11 +228,11 @@ class ZonesTest(BaseZonesTest):
         self.assertEqual('PENDING', zone['status'])
 
         LOG.info('Ensure we respond with updated values')
-        self.assertEqual(serial, int(zone['serial'])
+        self.assertEqual(serial, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
-        
+
         LOG.info('Ensure we respond with updated serial')
         self.assertEqual(serial, body['serial'])
 
