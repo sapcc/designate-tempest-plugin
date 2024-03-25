@@ -128,6 +128,12 @@ class ZonesTest(BaseZonesTest):
         LOG.info('Ensure we respond with a right serial')
         self.assertEqual(serial, zone['serial'])
 
+        LOG.info('Fetch the zone')
+        _, body = self.client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial, body['serial'])
+
     @decorators.idempotent_id('5b288927-42b3-4c2d-b0b5-29a8092eaa01')
     def test_create_zone_serial_unixtime(self):
         serial = 1369550494
@@ -136,6 +142,12 @@ class ZonesTest(BaseZonesTest):
 
         LOG.info('Ensure we respond with a right serial')
         self.assertEqual(serial, zone['serial'])
+
+        LOG.info('Fetch the zone')
+        _, body = self.client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial, body['serial'])
 
     @decorators.idempotent_id('4779dea3-0591-4219-a1d8-6581f907ecb1')
     def test_create_zone_serial_number(self):
@@ -146,9 +158,15 @@ class ZonesTest(BaseZonesTest):
         LOG.info('Ensure we respond with a right serial')
         self.assertEqual(serial, zone['serial'])
 
+        LOG.info('Fetch the zone')
+        _, body = self.client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial, body['serial'])
+
     @decorators.idempotent_id('757c5bd3-2d25-4242-9eac-45528828411f')
     def test_update_zone_serial_to_yyyymmddss(self):
-        serial = timeutils.utcnow()
+        serial = int(timeutils.utcnow())
         LOG.info('Create a zone')
         _, zone = self.client.create_zone(serial=dns_data_utils.rand_serial())
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
@@ -163,6 +181,12 @@ class ZonesTest(BaseZonesTest):
 
         LOG.info('Ensure we respond with updated values')
         self.assertEqual(serial, zone['serial'])
+
+        LOG.info('Fetch the zone')
+        _, body = self.client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial, body['serial'])
 
     @decorators.idempotent_id('4283f440-990e-4097-9a92-7f8aa1638630')
     def test_update_zone_serial_to_unixtime(self):
@@ -182,6 +206,12 @@ class ZonesTest(BaseZonesTest):
         LOG.info('Ensure we respond with updated values')
         self.assertEqual(serial, zone['serial'])
 
+        LOG.info('Fetch the zone')
+        _, body = self.client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial, body['serial'])
+
     @decorators.idempotent_id('b4ef30c2-823f-47ca-9ef2-84348a77818c')
     def test_update_zone_serial_to_number(self):
         serial = dns_data_utils.rand_serial()
@@ -199,6 +229,12 @@ class ZonesTest(BaseZonesTest):
 
         LOG.info('Ensure we respond with updated values')
         self.assertEqual(serial, zone['serial'])
+
+        LOG.info('Fetch the zone')
+        _, body = self.client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial, body['serial'])
 
 
 class ZonesAdminTest(BaseZonesTest):
