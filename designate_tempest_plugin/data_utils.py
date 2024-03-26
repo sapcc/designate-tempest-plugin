@@ -266,4 +266,4 @@ def rand_serial():
     :return: a random serial
     :rtype: string
     """
-    return str(random.randint(1, 4294967295))
+    return str(random.randint(1, 2147483646))
