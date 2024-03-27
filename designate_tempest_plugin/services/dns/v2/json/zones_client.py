@@ -44,11 +44,11 @@ class ZonesClient(base.DnsClientV2Base):
         zone = {
             'name': name or dns_data_utils.rand_zone_name(prefix='testdomain'),
             'email': email or dns_data_utils.rand_email(),
-            'serial': serial or dns_data_utils.rand_serial(),
             'ttl': ttl or dns_data_utils.rand_ttl(),
             'description': description or data_utils.rand_name('test-zone'),
         }
-
+        if serial:
+            zone['serial'] = serial
         resp, body = self._create_request('zones', zone, params=params)
 
         # Create Zone should Return a HTTP 202
