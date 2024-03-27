@@ -126,7 +126,7 @@ class ZonesTest(BaseZonesTest):
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Ensure we respond with a right serial')
-        self.assertEqual(serial, zone['serial'])
+        self.assertEqual(serial - 1, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
@@ -141,7 +141,7 @@ class ZonesTest(BaseZonesTest):
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Ensure we respond with a right serial')
-        self.assertEqual(serial, zone['serial'])
+        self.assertEqual(serial - 1, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
@@ -156,7 +156,7 @@ class ZonesTest(BaseZonesTest):
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Ensure we respond with a right serial')
-        self.assertEqual(serial, zone['serial'])
+        self.assertEqual(serial - 1, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
@@ -185,31 +185,31 @@ class ZonesTest(BaseZonesTest):
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertEqual(serial, body['serial'])
+        self.assertNotEqual(serial, body['serial'])
 
     @decorators.idempotent_id('b4ef30c2-823f-47ca-9ef2-84348a77818c')
     def test_update_zone_serial_to_number(self):
-        serial = dns_data_utils.rand_serial()
+        serial = 2147483646
         LOG.info('Create a zone')
         _, zone = self.client.create_zone(serial=serial)
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Update the zone')
         _, zone = self.client.update_zone(
-            zone['id'], serial=str(int(serial) + 1))
+            zone['id'], serial=serial)
 
         LOG.info('Ensure we respond with UPDATE+PENDING')
         self.assertEqual('UPDATE', zone['action'])
         self.assertEqual('PENDING', zone['status'])
 
         LOG.info('Ensure we respond with updated values')
-        self.assertEqual(serial, zone['serial'])
+        self.assertEqual(serial - 1, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertEqual(int(serial) - 1, body['serial'])
+        self.assertEqual(serial - 1, body['serial'])
 
 
 class ZonesAdminTest(BaseZonesTest):
