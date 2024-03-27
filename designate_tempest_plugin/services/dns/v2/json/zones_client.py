@@ -115,7 +115,6 @@ class ZonesClient(base.DnsClientV2Base):
             'email': email or dns_data_utils.rand_email(),
             'ttl': ttl or dns_data_utils.rand_ttl(),
             'description': description or data_utils.rand_name('test-zone'),
-            'serial': serial or dns_data_utils.rand_serial(),
         }
 
         resp, body = self._update_request('zones', uuid, zone, params=params)
