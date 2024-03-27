@@ -168,7 +168,7 @@ class ZonesTest(BaseZonesTest):
     def test_update_zone_serial_to_unixtime(self):
         serial = 12345
         LOG.info('Create a zone')
-        _, zone = self.client.create_zone(serial)
+        _, zone = self.client.create_zone(serial=serial)
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Update the zone')
