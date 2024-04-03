@@ -35,7 +35,7 @@ class RecordsetClient(base.DnsClientV2Base):
 
     @base.handle_errors
     def create_recordset(self, zone_uuid, recordset_data,
-                         params=None, wait_until=False):
+                         params=None, headers=None, wait_until=False):
         """Create a recordset for the specified zone.
 
         :param zone_uuid: Unique identifier of the zone in UUID format..
@@ -43,23 +43,31 @@ class RecordsetClient(base.DnsClientV2Base):
                                data.
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
+        :param headers (dict): The headers to use for the request.
         :return: A tuple with the server response and the created zone.
         """
-        resp, body = self._create_request(
-            "/zones/{0}/recordsets".format(zone_uuid), params=params,
-            data=recordset_data)
+        if headers:
+            resp, body = self._create_request(
+                "/zones/{0}/recordsets".format(zone_uuid), params=params,
+                data=recordset_data, extra_headers=True, headers=headers)
+        else:
+            resp, body = self._create_request(
+                "/zones/{0}/recordsets".format(zone_uuid), params=params,
+                data=recordset_data)
 
         # Create Recordset should Return a HTTP 202
         self.expected_success(202, resp.status)
 
         if wait_until:
-            waiters.wait_for_recordset_status(self, body['id'], wait_until)
+            waiters.wait_for_recordset_status(
+                self, zone_uuid, body['id'], wait_until, headers=headers)
 
         return resp, body
 
     @base.handle_errors
     def update_recordset(self, zone_uuid, recordset_uuid,
-                         recordet_data, params=None):
+                         recordset_data, params=None,
+                         headers=None, extra_headers=None, wait_until=False):
         """Update the recordset related to the specified zone.
         :param zone_uuid: Unique identifier of the zone in UUID format.
         :param recordset_uuid: Unique identifier of the recordset in UUID
@@ -68,44 +76,62 @@ class RecordsetClient(base.DnsClientV2Base):
                                data.
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
+        :param headers (dict): The headers to use for the request.
+        :param extra_headers (bool): Boolean value than indicates if the
+                                     headers returned by the get_headers()
+                                     method are to be used but additional
+                                     headers are needed in the request
+                                     pass them in as a dict.
+        :param wait_until: Block until the recordset reaches the
+                           desired status
         :return: A tuple with the server response and the created zone.
         """
         resp, body = self._put_request(
             'zones/{0}/recordsets'.format(zone_uuid), recordset_uuid,
-            data=recordet_data, params=params)
+            data=recordset_data, params=params,
+            headers=headers, extra_headers=extra_headers)
 
         # Update Recordset should Return a HTTP 202, or a 200 if the recordset
         # is already active
         self.expected_success([200, 202], resp.status)
 
+        if wait_until:
+            waiters.wait_for_recordset_status(
+                self, zone_uuid, body['id'], wait_until)
+
         return resp, body
 
     @base.handle_errors
-    def show_recordset(self, zone_uuid, recordset_uuid, params=None):
+    def show_recordset(self, zone_uuid, recordset_uuid,
+                       params=None, headers=None):
         """Gets a specific recordset related to a specific zone.
         :param zone_uuid: Unique identifier of the zone in UUID format.
         :param recordset_uuid: Unique identifier of the recordset in
                                UUID format.
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
+        :param headers (dict): The headers to use for the request.
         :return: Serialized recordset as a list.
         """
         return self._show_request(
             'zones/{0}/recordsets'.format(zone_uuid), recordset_uuid,
-            params=params)
+            params=params, headers=headers)
 
     @base.handle_errors
-    def delete_recordset(self, zone_uuid, recordset_uuid, params=None):
+    def delete_recordset(self, zone_uuid, recordset_uuid, params=None,
+                         headers=None):
         """Deletes a recordset related to the specified zone UUID.
         :param zone_uuid: The unique identifier of the zone.
         :param recordset_uuid: The unique identifier of the record in
                                uuid format.
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
+        :param headers (dict): The headers to use for the request.
         :return: A tuple with the server response and the response body.
         """
         resp, body = self._delete_request(
-            'zones/{0}/recordsets'.format(zone_uuid), recordset_uuid)
+            'zones/{0}/recordsets'.format(zone_uuid), recordset_uuid,
+            params=params, headers=headers)
 
         # Delete Recordset should Return a HTTP 202
         self.expected_success(202, resp.status)
@@ -113,15 +139,17 @@ class RecordsetClient(base.DnsClientV2Base):
         return resp, body
 
     @base.handle_errors
-    def list_recordset(self, uuid, params=None):
+    def list_recordset(self, uuid, params=None, headers=None):
         """List recordsets related to the specified zone.
         :param uuid: Unique identifier of the zone in UUID format.
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
+        :param headers (dict): The headers to use for the request.
         :return: Serialized recordset as a list.
         """
         return self._list_request(
-            'zones/{0}/recordsets'.format(uuid), params=params)
+            'zones/{0}/recordsets'.format(uuid),
+            params=params, headers=headers)
 
     @base.handle_errors
     def show_zones_recordset(self, recordset_uuid, params=None):
@@ -150,3 +178,14 @@ class RecordsetClient(base.DnsClientV2Base):
         """
         return self._list_request(
             'recordsets', params=params)
+
+    @base.handle_errors
+    def list_owned_recordsets(self, params=None, headers=None):
+        """Lists recordsets for all projects in Designate.
+        :param params: A Python dict that represents the query paramaters to
+                       include in the request URI.
+        :param headers: (dict): The headers to use for the request.
+        :return: Serialized recordset as a list.
+        """
+        return self._list_request(
+            'recordsets', params=params, headers=headers)[1]['recordsets']

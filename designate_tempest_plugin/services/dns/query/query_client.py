@@ -14,8 +14,8 @@
 import dns
 import dns.exception
 import dns.query
-import six
 from tempest import config
+from oslo_utils import netutils
 
 CONF = config.CONF
 
@@ -25,15 +25,17 @@ class QueryClient(object):
 
     def __init__(self, nameservers=None, query_timeout=None,
                  build_interval=None, build_timeout=None):
-        self.nameservers = nameservers or []
+        self.nameservers = nameservers or CONF.dns.nameservers
         self.query_timeout = query_timeout or CONF.dns.query_timeout
         self.build_interval = build_interval or CONF.dns.build_interval
         self.build_timeout = build_timeout or CONF.dns.build_timeout
-
         self.clients = [SingleQueryClient(ns, query_timeout=query_timeout)
                         for ns in nameservers]
 
     def query(self, zone_name, rdatatype):
+        if not self.nameservers:
+            raise ValueError('Nameservers list cannot be empty and it should '
+                             'contain DNS backend IPs to "dig" for')
         return [c.query(zone_name, rdatatype) for c in self.clients]
 
 
@@ -51,7 +53,7 @@ class SingleQueryClient(object):
     @classmethod
     def _prepare_query(cls, zone_name, rdatatype):
         # support plain strings: "SOA", "A"
-        if isinstance(rdatatype, six.string_types):
+        if isinstance(rdatatype, str):
             rdatatype = dns.rdatatype.from_text(rdatatype)
         dns_message = dns.message.make_query(zone_name, rdatatype)
         dns_message.set_opcode(dns.opcode.QUERY)
@@ -60,7 +62,7 @@ class SingleQueryClient(object):
     @classmethod
     def _dig(cls, name, rdatatype, ip, port, timeout):
         query = cls._prepare_query(name, rdatatype)
-        return dns.query.udp(query, ip, port=port, timeout=timeout)
+        return dns.query.udp(query, ip.strip('[]'), port=port, timeout=timeout)
 
 
 class Nameserver(object):
@@ -77,7 +79,7 @@ class Nameserver(object):
 
     @classmethod
     def from_str(self, nameserver):
-        if ':' in nameserver:
-            ip, port = nameserver.split(':')
-            return Nameserver(ip, int(port))
+        ip, port = netutils.parse_host_port(nameserver)
+        if port:
+            return Nameserver(ip, port)
         return Nameserver(nameserver)

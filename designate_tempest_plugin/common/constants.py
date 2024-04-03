@@ -1,4 +1,4 @@
-# Copyright 2016 Hewlett Packard Enterprise Development Company, L.P.
+# Copyright 2021 Red Hat.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -11,18 +11,32 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-from designate_tempest_plugin.services.dns.json import base
 
-handle_errors = base.handle_errors
+# Designate statuses/actions strings
+PENDING = 'PENDING'
+COMPLETE = 'COMPLETE'
+ERROR = 'ERROR'
+DELETED = 'DELETED'
+DELETE = 'DELETE'
+ACTIVE = 'ACTIVE'
+INACTIVE = 'INACTIVE'
+UP = 'UP'
+CREATE = 'CREATE'
+UPDATE = 'UPDATE'
+NONE = 'NONE'
 
+# Zone types
+PRIMARY_ZONE_TYPE = 'PRIMARY'
+SECONDARY_ZONE_TYPE = 'SECONDARY'
 
-class DnsClientV1Base(base.DnsClientBase):
-    """Base API V1 Tempest REST client for Designate API"""
-    uri_prefix = 'v1'
-
-    CREATE_STATUS_CODES = [200]
-    SHOW_STATUS_CODES = [200]
-    LIST_STATUS_CODES = [200]
-    PUT_STATUS_CODES = [200]
-    UPDATE_STATUS_CODES = []
-    DELETE_STATUS_CODES = [200]
+# DNS Record types
+A = 'A'
+AAAA = 'AAAA'
+ALIAS = 'ALIAS'
+CNAME = 'CNAME'
+MX = 'MX'
+NS = 'NS'
+PTR = 'PTR'
+SOA = 'SOA'
+SRV = 'SRV'
+TXT = 'TXT'

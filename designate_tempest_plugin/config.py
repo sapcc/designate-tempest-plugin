@@ -41,36 +41,32 @@ DnsGroup = [
                default=360,
                help="Timeout in seconds to wait for an resource to build."),
     cfg.IntOpt('min_ttl',
-               default=1,
-               help="The minimum value to respect when generating ttls"),
+               default=0,
+               help="The minimum value to respect when generating ttl"),
     cfg.ListOpt('nameservers',
                 default=[],
                 help="The nameservers to check for change going live"),
     cfg.IntOpt('query_timeout',
-               default=1,
+               default=3,
                help="The timeout on a single dns query to a nameserver"),
     cfg.StrOpt('zone_id',
                help="The target zone to test the dns recordsets "
-                    "If it is not specified, a new zone will be created ")
-
+                    "If it is not specified, a new zone will be created "),
+    cfg.StrOpt('tld_suffix',
+               default='test',
+               help="TLD suffix that used in all tests (if not overridden).")
 ]
 
 dns_feature_group = cfg.OptGroup(name='dns_feature_enabled',
                                  title='Enabled Designate Features')
 
 DnsFeatureGroup = [
-    cfg.BoolOpt('api_v1',
-                default=False,
-                help="Is the v1 dns API enabled."),
     cfg.BoolOpt('api_v2',
                 default=True,
                 help="Is the v2 dns API enabled."),
     cfg.BoolOpt('api_admin',
-                default=True,
-                help="Is the admin dns API enabled."),
-    cfg.BoolOpt('api_v1_servers',
                 default=False,
-                help="Is the v1 dns servers API enabled."),
+                help="Is the admin dns API enabled."),
     cfg.BoolOpt('api_v2_root_recordsets',
                 default=False,
                 help="Is the v2 root recordsets API enabled."),
@@ -83,6 +79,32 @@ DnsFeatureGroup = [
                 "Must be set to True starting from Rocky release."),
     cfg.BoolOpt('bug_1573141_fixed',
                 default=True,
+                deprecated_for_removal=True,
+                deprecated_reason='This bug was fixed in 3.0.0',
                 help="Is https://bugs.launchpad.net/designate/+bug/1573141 "
                 "fixed"),
+    cfg.BoolOpt('bug_1932026_fixed',
+                default=False,
+                help="Is https://bugs.launchpad.net/designate/+bug/1932026 "
+                     "fixed"),
+    # Note: Also see the enforce_scope section (from tempest) for Designate API
+    #       scope checking setting.
+    cfg.BoolOpt('enforce_new_defaults',
+                default=False,
+                help='Does the dns service API policies enforce '
+                     'the new keystone default roles? This configuration '
+                     'value should be same as designate.conf: '
+                     '[oslo_policy].enforce_new_defaults option.'),
+]
+
+# Extending this enforce_scope group defined in tempest
+enforce_scope_group = cfg.OptGroup(name="enforce_scope",
+                                   title="OpenStack Services with "
+                                         "enforce scope")
+EnforceScopeGroup = [
+    cfg.BoolOpt('designate',
+                default=False,
+                help='Does the dns service API policies enforce '
+                     'scope? This configuration value should be same as '
+                     'designate.conf: [oslo_policy].enforce_scope option.'),
 ]

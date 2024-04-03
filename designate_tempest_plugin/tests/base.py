@@ -11,12 +11,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import six
 from tempest import test
 from tempest import config
 from tempest.lib.common.utils import test_utils as utils
 
-from designate_tempest_plugin import clients
+from designate_tempest_plugin.services.dns.query.query_client import (
+    QueryClient)
+from designate_tempest_plugin.tests import rbac_utils
 
 
 CONF = config.CONF
@@ -54,7 +55,7 @@ class AssertRaisesDns(test.BaseTestCase):
         return False
 
 
-class BaseDnsTest(test.BaseTestCase):
+class BaseDnsTest(rbac_utils.RBACTestsMixin, test.BaseTestCase):
     """Base class for DNS tests."""
 
     # NOTE(andreaf) credentials holds a list of the credentials to be allocated
@@ -63,9 +64,23 @@ class BaseDnsTest(test.BaseTestCase):
     # rest the actual roles.
     # NOTE(kiall) primary will result in a manager @ cls.os_primary, alt will
     # have cls.os_alt, and admin will have cls.os_admin.
-    # NOTE(kiall) We should default to only primary, and request additional
-    # credentials in the tests that require them.
-    credentials = ['primary']
+    # NOTE(johnsom) We will allocate most credentials here so that each test
+    # can test for allowed and disallowed RBAC policies.
+    credentials = ['admin', 'primary', 'alt']
+    if CONF.dns_feature_enabled.enforce_new_defaults:
+        credentials.extend(['system_admin', 'system_reader',
+                            'project_member', 'project_reader'])
+
+    # A tuple of credentials that will be allocated by tempest using the
+    # 'credentials' list above. These are used to build RBAC test lists.
+    allocated_creds = []
+    for cred in credentials:
+        if isinstance(cred, list):
+            allocated_creds.append('os_roles_' + cred[0])
+        else:
+            allocated_creds.append('os_' + cred)
+    # Tests shall not mess with the list of allocated credentials
+    allocated_credentials = tuple(allocated_creds)
 
     @classmethod
     def skip_checks(cls):
@@ -76,8 +91,32 @@ class BaseDnsTest(test.BaseTestCase):
                         % cls.__name__)
             raise cls.skipException(skip_msg)
 
+    @classmethod
+    def setup_clients(cls):
+        super(BaseDnsTest, cls).setup_clients()
+        # The Query Client is not an OpenStack client which means
+        # we should not set it up through the tempest client manager.
+        # Set it up here so all tests have access to it.
+        cls.query_client = QueryClient(
+            nameservers=CONF.dns.nameservers,
+            query_timeout=CONF.dns.query_timeout,
+            build_interval=CONF.dns.build_interval,
+            build_timeout=CONF.dns.build_timeout,
+        )
+        # Most tests need a "primary" zones client and we need it for the
+        # API version check, so create one instance here.
+        cls.zones_client = cls.os_primary.dns_v2.ZonesClient()
+
+    @classmethod
+    def resource_setup(cls):
+        """Setup resources needed by the tests."""
+        super(BaseDnsTest, cls).resource_setup()
+
+        # The credential does not matter here.
+        cls.api_version = cls.zones_client.get_max_api_version()
+
     def assertExpected(self, expected, actual, excluded_keys):
-        for key, value in six.iteritems(expected):
+        for key, value in expected.items():
             if key not in excluded_keys:
                 self.assertIn(key, actual)
                 self.assertEqual(value, actual[key], key)
@@ -98,40 +137,58 @@ class BaseDnsTest(test.BaseTestCase):
         with context:
             callable_(*args, **kwargs)
 
+    def transfer_request_delete(self, transfer_client, transfer_request_id):
+        return utils.call_and_ignore_notfound_exc(
+            transfer_client.delete_transfer_request, transfer_request_id)
+
     def wait_zone_delete(self, zone_client, zone_id, **kwargs):
-        zone_client.delete_zone(zone_id, **kwargs)
+        self._delete_zone(zone_client, zone_id, **kwargs)
         utils.call_until_true(self._check_zone_deleted,
                               CONF.dns.build_timeout,
                               CONF.dns.build_interval,
                               zone_client,
                               zone_id)
 
+    def wait_recordset_delete(self, recordset_client, zone_id,
+                              recordset_id, **kwargs):
+        self._delete_recordset(
+            recordset_client, zone_id, recordset_id, **kwargs)
+        utils.call_until_true(self._check_recordset_deleted,
+                              CONF.dns.build_timeout,
+                              CONF.dns.build_interval,
+                              recordset_client,
+                              zone_id,
+                              recordset_id)
+
+    def unset_ptr(self, ptr_client, fip_id, **kwargs):
+        return utils.call_and_ignore_notfound_exc(
+            ptr_client.unset_ptr_record, fip_id, **kwargs)
+
+    def _delete_zone(self, zone_client, zone_id, **kwargs):
+        return utils.call_and_ignore_notfound_exc(zone_client.delete_zone,
+                                                  zone_id, **kwargs)
+
     def _check_zone_deleted(self, zone_client, zone_id):
         return utils.call_and_ignore_notfound_exc(zone_client.show_zone,
                                                   zone_id) is None
 
+    def _delete_recordset(self, recordset_client, zone_id,
+                          recordset_id, **kwargs):
+        return utils.call_and_ignore_notfound_exc(
+            recordset_client.delete_recordset,
+            zone_id, recordset_id, **kwargs)
 
-class BaseDnsV1Test(BaseDnsTest):
-    """Base class for DNS V1 API tests."""
-
-    # Use the Designate V1 Client Manager
-    client_manager = clients.ManagerV1
-
-    @classmethod
-    def skip_checks(cls):
-        super(BaseDnsV1Test, cls).skip_checks()
-
-        if not CONF.dns_feature_enabled.api_v1:
-            skip_msg = ("%s skipped as designate v1 API is not available"
-                        % cls.__name__)
-            raise cls.skipException(skip_msg)
+    def _check_recordset_deleted(
+            self, recordset_client, zone_id, recordset_id):
+        return utils.call_and_ignore_notfound_exc(
+            recordset_client.show_recordset, zone_id, recordset_id) is None
 
 
 class BaseDnsV2Test(BaseDnsTest):
     """Base class for DNS V2 API tests."""
 
-    # Use the Designate V2 Client Manager
-    client_manager = clients.ManagerV2
+    all_projects_header = {'X-Auth-All-Projects': True}
+    managed_records = {'x-designate-edit-managed-records': True}
 
     @classmethod
     def skip_checks(cls):
@@ -145,9 +202,6 @@ class BaseDnsV2Test(BaseDnsTest):
 
 class BaseDnsAdminTest(BaseDnsTest):
     """Base class for DNS Admin API tests."""
-
-    # Use the Designate Admin Client Manager
-    client_manager = clients.ManagerAdmin
 
     @classmethod
     def skip_checks(cls):

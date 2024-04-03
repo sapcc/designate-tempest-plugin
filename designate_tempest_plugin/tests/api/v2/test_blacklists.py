@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 from oslo_log import log as logging
+from tempest import config
 from tempest.lib import decorators
 from tempest.lib import exceptions as lib_exc
 from tempest.lib.common.utils import data_utils
@@ -19,6 +20,7 @@ from tempest.lib.common.utils import data_utils
 from designate_tempest_plugin import data_utils as dns_data_utils
 from designate_tempest_plugin.tests import base
 
+CONF = config.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -27,8 +29,6 @@ class BaseBlacklistsTest(base.BaseDnsV2Test):
 
 
 class BlacklistsAdminTest(BaseBlacklistsTest):
-
-    credentials = ["admin"]
 
     @classmethod
     def setup_credentials(cls):
@@ -39,7 +39,12 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
     @classmethod
     def setup_clients(cls):
         super(BlacklistsAdminTest, cls).setup_clients()
-        cls.admin_client = cls.os_admin.blacklists_client
+
+        if CONF.enforce_scope.designate:
+            cls.admin_client = cls.os_system_admin.dns_v2.BlacklistsClient()
+        else:
+            cls.admin_client = cls.os_admin.dns_v2.BlacklistsClient()
+        cls.primary_client = cls.os_primary.dns_v2.BlacklistsClient()
 
     @decorators.idempotent_id('3a7f7564-6bdd-446e-addc-a3475b4c3f71')
     def test_create_blacklist(self):
@@ -53,6 +58,34 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
 
         self.assertExpected(blacklist, body, self.excluded_keys)
 
+        expected_allowed = ['os_admin', 'os_system_admin']
+
+        self.check_CUD_RBAC_enforcement('BlacklistsClient', 'create_blacklist',
+                                        expected_allowed, False)
+
+    @decorators.idempotent_id('ea608152-da3c-11eb-b8b8-74e5f9e2a801')
+    def test_create_blacklist_invalid_pattern(self):
+        patterns = ['', '#(*&^%$%$#@$', 'a' * 1000]
+        for pattern in patterns:
+            LOG.info(
+                'Try to create a blacklist using pattern:{}'.format(pattern))
+            self.assertRaises(
+                lib_exc.BadRequest, self.admin_client.create_blacklist,
+                pattern=pattern)
+
+    @decorators.idempotent_id('664bdaa0-da47-11eb-b8b8-74e5f9e2a801')
+    def test_create_blacklist_huge_size_description(self):
+        LOG.info('Try to create a blacklist using huge size description')
+        self.assertRaises(
+            lib_exc.BadRequest, self.admin_client.create_blacklist,
+            description='a' * 1000)
+
+    @decorators.idempotent_id('fe9de464-d8d1-11eb-bcdc-74e5f9e2a801')
+    def test_create_blacklist_as_primary_fails(self):
+        LOG.info('As Primary user, try to create a blacklist')
+        self.assertRaises(
+            lib_exc.Forbidden, self.primary_client.create_blacklist)
+
     @decorators.idempotent_id('5bc02942-6225-4619-8f49-2105581a8dd6')
     def test_show_blacklist(self):
         LOG.info('Create a blacklist')
@@ -64,6 +97,15 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
 
         LOG.info('Ensure the fetched response matches the created blacklist')
         self.assertExpected(blacklist, body, self.excluded_keys)
+
+        if CONF.enforce_scope.designate:
+            expected_allowed = ['os_system_admin', 'os_system_reader']
+        else:
+            expected_allowed = ['os_admin', 'os_system_admin']
+
+        self.check_list_show_RBAC_enforcement(
+            'BlacklistsClient', 'show_blacklist', expected_allowed, False,
+            blacklist['id'])
 
     @decorators.idempotent_id('dcea40d9-8d36-43cb-8440-4a842faaef0d')
     def test_delete_blacklist(self):
@@ -78,6 +120,12 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
         # A blacklist delete returns an empty body
         self.assertEqual(body.strip(), b"")
 
+        expected_allowed = ['os_admin', 'os_system_admin']
+
+        self.check_CUD_RBAC_enforcement(
+            'BlacklistsClient', 'delete_blacklist', expected_allowed, False,
+            blacklist['id'])
+
     @decorators.idempotent_id('3a2a1e6c-8176-428c-b5dd-d85217c0209d')
     def test_list_blacklists(self):
         LOG.info('Create a blacklist')
@@ -89,6 +137,15 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
 
         # TODO(pglass): Assert that the created blacklist is in the response
         self.assertGreater(len(body['blacklists']), 0)
+
+        if CONF.enforce_scope.designate:
+            expected_allowed = ['os_system_admin']
+        else:
+            expected_allowed = ['os_admin', 'os_system_admin']
+
+        self.check_list_IDs_RBAC_enforcement(
+            'BlacklistsClient', 'list_blacklists',
+            expected_allowed, [blacklist['id']])
 
     @decorators.idempotent_id('0063d6ad-9557-49c7-b521-e64a14d4d0d0')
     def test_update_blacklist(self):
@@ -109,10 +166,16 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
         self.assertEqual(pattern, body['pattern'])
         self.assertEqual(description, body['description'])
 
+        expected_allowed = ['os_admin', 'os_system_admin']
+
+        self.check_CUD_RBAC_enforcement(
+            'BlacklistsClient', 'update_blacklist', expected_allowed, False,
+            uuid=blacklist['id'], pattern=pattern, description=description)
+
 
 class TestBlacklistNotFoundAdmin(BaseBlacklistsTest):
 
-    credentials = ["admin"]
+    credentials = ["admin", "system_admin", "primary"]
 
     @classmethod
     def setup_credentials(cls):
@@ -123,7 +186,10 @@ class TestBlacklistNotFoundAdmin(BaseBlacklistsTest):
     @classmethod
     def setup_clients(cls):
         super(TestBlacklistNotFoundAdmin, cls).setup_clients()
-        cls.admin_client = cls.os_admin.blacklists_client
+        if CONF.enforce_scope.designate:
+            cls.admin_client = cls.os_system_admin.dns_v2.BlacklistsClient()
+        else:
+            cls.admin_client = cls.os_admin.dns_v2.BlacklistsClient()
 
     @decorators.idempotent_id('9d65b638-fe98-47a8-853f-fa9244d144cc')
     def test_show_blacklist_404(self):
@@ -155,7 +221,7 @@ class TestBlacklistNotFoundAdmin(BaseBlacklistsTest):
 
 class TestBlacklistInvalidIdAdmin(BaseBlacklistsTest):
 
-    credentials = ["admin"]
+    credentials = ["admin", "system_admin", "primary"]
 
     @classmethod
     def setup_credentials(cls):
@@ -166,7 +232,10 @@ class TestBlacklistInvalidIdAdmin(BaseBlacklistsTest):
     @classmethod
     def setup_clients(cls):
         super(TestBlacklistInvalidIdAdmin, cls).setup_clients()
-        cls.admin_client = cls.os_admin.blacklists_client
+        if CONF.enforce_scope.designate:
+            cls.admin_client = cls.os_system_admin.dns_v2.BlacklistsClient()
+        else:
+            cls.admin_client = cls.os_admin.dns_v2.BlacklistsClient()
 
     @decorators.idempotent_id('c7bae53f-2edc-45d8-b254-8a81482728c1')
     def test_show_blacklist_invalid_uuid(self):

@@ -60,26 +60,30 @@ class TransferRequestClient(base.DnsClientV2Base):
         return resp, body
 
     @base.handle_errors
-    def show_transfer_request(self, uuid, params=None):
+    def show_transfer_request(self, uuid, params=None, headers=None):
         """Gets a specific transfer_requestsed zone.
         :param uuid: Unique identifier of the transfer_requestsed zone in
                      UUID format.
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
+
+        :param headers (dict): The headers to use for the request.
         :return: Serialized transfer_requestsed zone as a dictionary.
         """
         return self._show_request(
-            'zones/tasks/transfer_requests', uuid, params=params)
+            'zones/tasks/transfer_requests', uuid,
+            params=params, headers=headers)
 
     @base.handle_errors
-    def list_transfer_requests(self, params=None):
+    def list_transfer_requests(self, params=None, headers=None):
         """Gets all the transfer_requestsed zones
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
+        :param headers (dict): The headers to use for the request.
         :return: Serialized transfer_requestsed zone as a list.
         """
         return self._list_request(
-            'zones/tasks/transfer_requests', params=params)
+            'zones/tasks/transfer_requests', params=params, headers=headers)
 
     @base.handle_errors
     def delete_transfer_request(self, uuid, params=None):
@@ -99,7 +103,7 @@ class TransferRequestClient(base.DnsClientV2Base):
 
     @base.handle_errors
     def update_transfer_request(self, uuid, transfer_request_data=None,
-                                params=None):
+                                params=None, headers=None):
         """Update a zone transfer_requests.
         :param uuid: Unique identifier of the zone transfer request in UUID
                      format.
@@ -107,13 +111,15 @@ class TransferRequestClient(base.DnsClientV2Base):
                                 data for zone transfer request
         :param params: A Python dict that represents the query paramaters to
                        include in the request URI.
+        :param headers (dict): The headers to use for the request.
         :return: Serialized imported zone as a dictionary.
         """
         transfer_request_uri = 'zones/tasks/transfer_requests'
         transfer_request_data = (transfer_request_data or
                                  dns_data_utils.rand_transfer_request_data())
         resp, body = self._update_request(
-            transfer_request_uri, uuid, transfer_request_data, params=params)
+            transfer_request_uri, uuid, transfer_request_data, params=params,
+            headers=headers)
 
         # Create Transfer request should Return a HTTP 200
         self.expected_success(200, resp.status)
