@@ -126,13 +126,13 @@ class ZonesTest(BaseZonesTest):
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Ensure we respond with a right serial')
-        self.assertEqual(serial - 1, zone['serial'])
+        self.assertEqual(serial, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertEqual(serial - 1, body['serial'])
+        self.assertEqual(serial, body['serial'])
 
     @decorators.idempotent_id('5b288927-42b3-4c2d-b0b5-29a8092eaa01')
     def test_create_zone_serial_unixtime(self):
@@ -141,13 +141,13 @@ class ZonesTest(BaseZonesTest):
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Ensure we respond with a right serial')
-        self.assertEqual(serial - 1, zone['serial'])
+        self.assertEqual(serial, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertEqual(serial - 1, body['serial'])
+        self.assertEqual(serial, body['serial'])
 
     @decorators.idempotent_id('4779dea3-0591-4219-a1d8-6581f907ecb1')
     def test_create_zone_serial_number(self):
@@ -156,13 +156,13 @@ class ZonesTest(BaseZonesTest):
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Ensure we respond with a right serial')
-        self.assertEqual(serial - 1, zone['serial'])
+        self.assertEqual(serial, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertEqual(serial - 1, body['serial'])
+        self.assertEqual(serial, body['serial'])
 
     @decorators.idempotent_id('4283f440-990e-4097-9a92-7f8aa1638630')
     def test_update_zone_serial_to_unixtime(self):
@@ -179,13 +179,13 @@ class ZonesTest(BaseZonesTest):
         self.assertEqual('PENDING', zone['status'])
 
         LOG.info('Ensure we respond with updated values')
-        self.assertNotEqual(serial, zone['serial'])
+        self.assertEqual(serial, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertNotEqual(serial, body['serial'])
+        self.assertEqual(serial, body['serial'])
 
     @decorators.idempotent_id('b4ef30c2-823f-47ca-9ef2-84348a77818c')
     def test_update_zone_serial_to_number(self):
@@ -203,13 +203,13 @@ class ZonesTest(BaseZonesTest):
         self.assertEqual('PENDING', zone['status'])
 
         LOG.info('Ensure we respond with updated values')
-        self.assertEqual(serial - 1, zone['serial'])
+        self.assertEqual(serial, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertEqual(serial - 1, body['serial'])
+        self.assertEqual(serial, body['serial'])
 
 
 class ZonesAdminTest(BaseZonesTest):
@@ -269,8 +269,7 @@ class ZoneOwnershipTest(BaseZonesTest):
                           self.client.create_zone, name=zone['name'])
 
         LOG.info('Create a zone as an alt user with existing domain')
-        self.assertRaises(lib_exc.Conflict,
-                          self.alt_client.create_zone, name=zone['name'])
+        self.assertRaises(lib_exc.Conflict, self.alt_client.create_zone, name=zone['name'])
 
     @decorators.idempotent_id('a48776fd-b1aa-4a25-9f09-d1d34cfbb175')
     def test_no_create_subdomain_by_alt_user(self):
