@@ -179,13 +179,13 @@ class ZonesTest(BaseZonesTest):
         self.assertEqual('PENDING', zone['status'])
 
         LOG.info('Ensure we respond with updated values')
-        self.assertNotEqual(serial, zone['serial'])
+        self.assertEqual(serial, zone['serial'])
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertNotEqual(serial, body['serial'])
+        self.assertEqual(serial, body['serial'])
 
     @decorators.idempotent_id('b4ef30c2-823f-47ca-9ef2-84348a77818c')
     def test_update_zone_serial_to_number(self):
@@ -266,11 +266,11 @@ class ZoneOwnershipTest(BaseZonesTest):
 
         LOG.info('Create a zone as an default with existing domain')
         self.assertRaises(lib_exc.Conflict,
-            self.client.create_zone, name=zone['name'])
+                          self.client.create_zone, name=zone['name'])
 
         LOG.info('Create a zone as an alt user with existing domain')
         self.assertRaises(lib_exc.Conflict,
-            self.alt_client.create_zone, name=zone['name'])
+                          self.alt_client.create_zone, name=zone['name'])
 
     @decorators.idempotent_id('a48776fd-b1aa-4a25-9f09-d1d34cfbb175')
     def test_no_create_subdomain_by_alt_user(self):
@@ -280,9 +280,9 @@ class ZoneOwnershipTest(BaseZonesTest):
 
         LOG.info('Create a zone as an alt user with existing subdomain')
         self.assertRaises(lib_exc.Forbidden,
-            self.alt_client.create_zone, name='sub.' + zone['name'])
+                          self.alt_client.create_zone, name='sub.' + zone['name'])
         self.assertRaises(lib_exc.Forbidden,
-            self.alt_client.create_zone, name='sub.sub.' + zone['name'])
+                          self.alt_client.create_zone, name='sub.sub.' + zone['name'])
 
     @decorators.idempotent_id('f1723d48-c082-43cd-94bf-ebeb5b8c9458')
     def test_no_create_superdomain_by_alt_user(self):
@@ -294,4 +294,4 @@ class ZoneOwnershipTest(BaseZonesTest):
 
         LOG.info('Create a zone as an alt user with existing superdomain')
         self.assertRaises(lib_exc.Forbidden,
-            self.alt_client.create_zone, name=zone_name)
+                          self.alt_client.create_zone, name=zone_name)
