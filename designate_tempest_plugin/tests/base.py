@@ -66,7 +66,7 @@ class BaseDnsTest(rbac_utils.RBACTestsMixin, test.BaseTestCase):
     # have cls.os_alt, and admin will have cls.os_admin.
     # NOTE(johnsom) We will allocate most credentials here so that each test
     # can test for allowed and disallowed RBAC policies.
-    credentials = ['admin', 'primary', ['dns_admin'], 'dns_admin']
+    credentials = ['admin', 'primary', ['cloud_dns_admin'], 'cloud_dns_admin']
     # if CONF.dns_feature_enabled.enforce_new_defaults:
     #     credentials.extend(['system_admin', 'system_reader',
     #                         'project_member', 'project_reader'])
