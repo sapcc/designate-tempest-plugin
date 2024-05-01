@@ -33,8 +33,6 @@ CONF = config.CONF
 
 class RecordsetsTest(base.BaseDnsV2Test):
 
-    credentials = ["admin", "system_admin", "primary"]
-
     @classmethod
     def setup_clients(cls):
         super(RecordsetsTest, cls).setup_clients()

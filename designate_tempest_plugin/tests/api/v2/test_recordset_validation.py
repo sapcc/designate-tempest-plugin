@@ -56,8 +56,6 @@ INVALID_SSHFP_DATASET = {
 
 class RecordsetValidationTest(base.BaseDnsV2Test):
 
-    credentials = ["admin", "primary", "system_admin"]
-
     def setUp(self):
         super(RecordsetValidationTest, self).setUp()
         self._zone = None

@@ -25,8 +25,6 @@ LOG = logging.getLogger(__name__)
 
 class ZonesImportTest(BaseZonesImportTest):
 
-    credentials = ["primary", "admin", "system_admin"]
-
     @classmethod
     def setup_clients(cls):
         super(ZonesImportTest, cls).setup_clients()

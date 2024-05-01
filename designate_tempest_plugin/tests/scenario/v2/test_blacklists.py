@@ -53,8 +53,6 @@ class BaseBlacklistsTest(base.BaseDnsV2Test):
 
 class BlacklistE2E(BaseBlacklistsTest):
 
-    credentials = ["admin", 'primary', 'system_admin']
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.

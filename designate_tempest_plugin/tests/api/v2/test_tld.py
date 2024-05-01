@@ -29,8 +29,6 @@ class BaseTldTest(base.BaseDnsV2Test):
 
 
 class TldAdminTest(BaseTldTest):
-    credentials = ["admin", "system_admin", "system_reader",
-                   "primary", "alt", "project_reader", "project_member"]
 
     # Use a TLD suffix unique to this test class.
     local_tld_suffix = '.'.join(["tldadmintest", CONF.dns.tld_suffix])
@@ -239,8 +237,6 @@ class TldAdminTest(BaseTldTest):
 
 class TestTldNotFoundAdmin(BaseTldTest):
 
-    credentials = ["admin", "system_admin", "primary"]
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.
@@ -284,8 +280,6 @@ class TestTldNotFoundAdmin(BaseTldTest):
 
 
 class TestTldInvalidIdAdmin(BaseTldTest):
-
-    credentials = ["admin", "system_admin", "primary"]
 
     @classmethod
     def setup_credentials(cls):

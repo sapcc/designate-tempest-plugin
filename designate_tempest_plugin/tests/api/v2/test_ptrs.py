@@ -82,8 +82,6 @@ class BasePtrTest(base.BaseDnsV2Test):
 
 class DesignatePtrRecord(BasePtrTest, tempest.test.BaseTestCase):
 
-    credentials = ['primary', 'admin', 'system_admin']
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.
@@ -208,7 +206,6 @@ class DesignatePtrRecord(BasePtrTest, tempest.test.BaseTestCase):
 
 class DesignatePtrRecordNegative(BasePtrTest, tempest.test.BaseTestCase):
 
-    credentials = ['primary', 'admin', 'system_admin']
 
     @classmethod
     def setup_credentials(cls):

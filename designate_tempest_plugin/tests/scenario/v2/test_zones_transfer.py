@@ -25,7 +25,6 @@ LOG = logging.getLogger(__name__)
 
 
 class ZonesTransferTest(base.BaseDnsV2Test):
-    credentials = ['primary', 'alt', 'admin', 'system_admin']
 
     @classmethod
     def setup_clients(cls):

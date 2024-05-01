@@ -30,7 +30,6 @@ LOG = logging.getLogger(__name__)
 
 
 class ZonesExportTest(BaseZoneExportsTest):
-    credentials = ["primary", "admin", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):

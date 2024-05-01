@@ -35,7 +35,6 @@ LOG = logging.getLogger(__name__)
 
 
 class ZonesTest(base.BaseDnsV2Test):
-    credentials = ["primary", "admin", "system_admin"]
 
     @classmethod
     def setup_clients(cls):

@@ -35,7 +35,6 @@ CONF = config.CONF
 
 class QuotasV2Test(base.BaseDnsV2Test):
 
-    credentials = ['primary', 'admin', 'system_admin', 'alt']
     test_quota_limit = 3
 
     @classmethod
@@ -285,8 +284,6 @@ class QuotasV2Test(base.BaseDnsV2Test):
 
 class QuotasBoundary(base.BaseDnsV2Test, tempest.test.BaseTestCase):
 
-    credentials = ['admin', 'system_admin', 'primary']
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.
@@ -379,7 +376,6 @@ class QuotasBoundary(base.BaseDnsV2Test, tempest.test.BaseTestCase):
 
 
 class SharedZonesQuotaTest(base.BaseDnsV2Test):
-    credentials = ['primary', 'admin', 'system_admin']
 
     @classmethod
     def setup_clients(cls):

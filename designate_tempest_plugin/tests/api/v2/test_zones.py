@@ -634,7 +634,6 @@ class ZonesTest(BaseZonesTest):
 
 
 class ZonesAdminTest(BaseZonesTest):
-    credentials = ["primary", "admin", "system_admin", "alt"]
 
     @classmethod
     def setup_credentials(cls):
@@ -736,7 +735,6 @@ class ZonesAdminTest(BaseZonesTest):
 
 
 class ZoneOwnershipTest(BaseZonesTest):
-    credentials = ["primary", "alt", "admin", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):
@@ -794,7 +792,6 @@ class ZoneOwnershipTest(BaseZonesTest):
 
 
 class ZonesNegativeTest(BaseZonesTest):
-    credentials = ["admin", "primary", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):

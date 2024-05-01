@@ -60,8 +60,6 @@ class BaseZonesTest(base.BaseDnsV2Test):
 
 
 class ZoneTasks(BaseZonesTest):
-    credentials = ["primary", "alt", "admin", "system_admin", "system_reader",
-                   "project_member", "project_reader"]
 
     @classmethod
     def setup_credentials(cls):
@@ -158,7 +156,6 @@ class ZoneTasks(BaseZonesTest):
 
 
 class ZoneTasksNegative(BaseZonesTest):
-    credentials = ["primary", "alt", "admin", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):

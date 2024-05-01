@@ -34,8 +34,6 @@ class BaseQuotasTest(base.BaseDnsAdminTest):
 
 class QuotasAdminTest(BaseQuotasTest):
 
-    credentials = ["admin", "primary", "system_admin"]
-
     def setUp(self):
         super(QuotasAdminTest, self).setUp()
         _, original_quotas = self.admin_client.show_quotas(
