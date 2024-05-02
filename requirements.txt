@@ -6,5 +6,6 @@ dnspython>=1.16.0  # http://www.dnspython.org/LICENSE
 oslo.serialization>=2.25.0 # Apache-2.0
 oslo.utils>=3.33.0 # Apache-2.0
 testtools>=2.2.0 # MIT
-git+https://github.com/sapcc/tempest.git@ccloud-python3
+tempest>=17.0.0 # Apache-2.0
+#git+https://github.com/sapcc/tempest.git@ccloud-python3
 oslo.utils>=4.7.0
