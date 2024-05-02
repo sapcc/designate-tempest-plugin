@@ -50,7 +50,7 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
     def test_create_blacklist(self):
         LOG.info('Create a blacklist')
         blacklist = {
-            'pattern': dns_data_utils.rand_zone_name(),
+            'pattern': dns_data_utils.rand_zone_name(prefix='testdomain'),
             'description': data_utils.rand_name(),
         }
         _, body = self.admin_client.create_blacklist(**blacklist)
@@ -154,7 +154,7 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
         self.addCleanup(self.admin_client.delete_blacklist, blacklist['id'])
 
         LOG.info('Update the blacklist')
-        pattern = dns_data_utils.rand_zone_name()
+        pattern = dns_data_utils.rand_zone_name('testdomain')
         description = data_utils.rand_name()
         _, body = self.admin_client.update_blacklist(
             uuid=blacklist['id'],
@@ -175,7 +175,6 @@ class BlacklistsAdminTest(BaseBlacklistsTest):
 
 class TestBlacklistNotFoundAdmin(BaseBlacklistsTest):
 
-    credentials = ["admin", "system_admin", "primary"]
 
     @classmethod
     def setup_credentials(cls):
@@ -220,8 +219,6 @@ class TestBlacklistNotFoundAdmin(BaseBlacklistsTest):
 
 
 class TestBlacklistInvalidIdAdmin(BaseBlacklistsTest):
-
-    credentials = ["admin", "system_admin", "primary"]
 
     @classmethod
     def setup_credentials(cls):

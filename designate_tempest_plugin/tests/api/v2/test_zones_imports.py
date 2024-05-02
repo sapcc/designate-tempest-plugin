@@ -55,8 +55,6 @@ class BaseZonesImportTest(base.BaseDnsV2Test):
 
 
 class ZonesImportTest(BaseZonesImportTest):
-    credentials = ["primary", "admin", "system_admin", "system_reader", "alt",
-                   "project_member", "project_reader"]
 
     @classmethod
     def setup_credentials(cls):
@@ -372,7 +370,6 @@ class ZonesImportTest(BaseZonesImportTest):
 
 
 class ZonesImportTestNegative(BaseZonesImportTest):
-    credentials = ["primary", "admin", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):

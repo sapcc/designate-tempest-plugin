@@ -24,8 +24,6 @@ LOG = logging.getLogger(__name__)
 
 
 class DesignateLimit(base.BaseDnsV2Test):
-    credentials = ["admin", "system_admin", "system_reader", "primary", "alt",
-                   "project_member", "project_reader"]
 
     @classmethod
     def setup_credentials(cls):

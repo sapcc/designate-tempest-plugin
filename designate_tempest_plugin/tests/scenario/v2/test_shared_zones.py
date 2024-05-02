@@ -28,8 +28,6 @@ LOG = logging.getLogger(__name__)
 
 
 class SharedZonesTest(base.BaseDnsV2Test):
-    credentials = ['primary', 'admin', 'system_admin', 'alt',
-                   ['demo', 'member']]
 
     @classmethod
     def setup_clients(cls):
@@ -366,8 +364,6 @@ class SharedZonesTest(base.BaseDnsV2Test):
 
 
 class SharedZonesTestNegative(base.BaseDnsV2Test):
-    credentials = ['primary', 'admin', 'system_admin', 'alt',
-                   ['demo', 'member']]
 
     @classmethod
     def setup_clients(cls):

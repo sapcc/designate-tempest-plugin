@@ -53,8 +53,6 @@ class BaseTransferAcceptTest(base.BaseDnsV2Test):
 
 
 class TransferAcceptTest(BaseTransferAcceptTest):
-    credentials = ["primary", "alt", "admin", "system_admin", "system_reader",
-                   "project_member", "project_reader"]
 
     @classmethod
     def setup_credentials(cls):
@@ -416,8 +414,6 @@ class TransferAcceptTest(BaseTransferAcceptTest):
 
 
 class TransferAcceptTestNegative(BaseTransferAcceptTest):
-
-    credentials = ["primary", "alt", "admin", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):

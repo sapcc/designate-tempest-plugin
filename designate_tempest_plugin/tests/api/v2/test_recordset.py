@@ -64,9 +64,6 @@ class BaseRecordsetsTest(base.BaseDnsV2Test):
 
 class RecordsetsTest(BaseRecordsetsTest):
 
-    credentials = ["admin", "system_admin", "system_reader", "primary", "alt",
-                   "project_member", "project_reader"]
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.
@@ -613,8 +610,6 @@ class RecordsetsTest(BaseRecordsetsTest):
 
 class RecordsetsNegativeTest(BaseRecordsetsTest):
 
-    credentials = ["admin", "system_admin", "primary", "alt"]
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.
@@ -749,7 +744,6 @@ class RecordsetsNegativeTest(BaseRecordsetsTest):
 
 
 class RootRecordsetsTests(BaseRecordsetsTest):
-    credentials = ["admin", "primary", "system_admin", "alt"]
 
     @classmethod
     def setup_credentials(cls):
@@ -858,8 +852,6 @@ class RootRecordsetsTests(BaseRecordsetsTest):
 
 
 class RecordsetOwnershipTest(BaseRecordsetsTest):
-
-    credentials = ["primary", "alt", "admin", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):
@@ -1072,8 +1064,6 @@ class RecordsetOwnershipTest(BaseRecordsetsTest):
 
 class AdminManagedRecordsetTest(BaseRecordsetsTest):
 
-    credentials = ["primary", "admin", "system_admin"]
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.
@@ -1130,8 +1120,6 @@ class AdminManagedRecordsetTest(BaseRecordsetsTest):
 
 
 class RecordsetsManagedRecordsNegativeTest(BaseRecordsetsTest):
-
-    credentials = ["admin", "system_admin", "primary"]
 
     @classmethod
     def setup_clients(cls):

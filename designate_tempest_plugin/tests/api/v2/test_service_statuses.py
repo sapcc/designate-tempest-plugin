@@ -26,9 +26,6 @@ LOG = logging.getLogger(__name__)
 
 class ServiceStatusAdmin(base.BaseDnsV2Test):
 
-    credentials = ["primary", "admin", "system_admin", "system_reader", "alt",
-                   "project_reader", "project_member"]
-
     mandatory_services = ['central', 'mdns', 'worker', 'producer']
     service_status_fields = [
         'id', 'hostname', 'service_name', 'status', 'stats', 'capabilities',
@@ -97,8 +94,6 @@ class ServiceStatusAdmin(base.BaseDnsV2Test):
 
 
 class ServiceStatusNegative(base.BaseDnsV2Test):
-
-    credentials = ["primary", "alt"]
 
     @classmethod
     def setup_credentials(cls):

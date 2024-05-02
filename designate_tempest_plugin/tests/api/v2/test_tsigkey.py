@@ -53,8 +53,6 @@ class BaseTsigkeyTest(base.BaseDnsV2Test):
 
 
 class TsigkeyAdminTest(BaseTsigkeyTest):
-    credentials = ["primary", "admin", "system_admin", "system_reader",
-                   "project_member", "project_reader", "alt"]
 
     @classmethod
     def setup_credentials(cls):
@@ -490,8 +488,6 @@ class TsigkeyAdminTest(BaseTsigkeyTest):
 
 class TestTsigkeyNotFoundAdmin(BaseTsigkeyTest):
 
-    credentials = ["admin", "system_admin", "primary"]
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.
@@ -535,8 +531,6 @@ class TestTsigkeyNotFoundAdmin(BaseTsigkeyTest):
 
 
 class TestTsigkeyInvalidIdAdmin(BaseTsigkeyTest):
-
-    credentials = ["admin", "primary", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):

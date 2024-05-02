@@ -539,9 +539,101 @@ class ZonesTest(BaseZonesTest):
             "Failed, actual Zone's TTL:{} "
             "is not Zero".format(body['ttl']))
 
+    @decorators.idempotent_id('b58b3086-a575-49d9-9379-92de88097742')
+    def test_create_zone_serial_yyyymmddss(self):
+        serial = 2024080201
+        LOG.info('Create a zone')
+        _, zone = self.zones_client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Ensure we respond with a right serial')
+        self.assertEqual(serial - 1, zone['serial'])
+
+        LOG.info('Fetch the zone')
+        _, body = self.zones_client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial - 1, body['serial'])
+
+    @decorators.idempotent_id('5b288927-42b3-4c2d-b0b5-29a8092eaa01')
+    def test_create_zone_serial_unixtime(self):
+        serial = 1369550494
+        _, zone = self.zones_client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Ensure we respond with a right serial')
+        self.assertEqual(serial - 1, zone['serial'])
+
+        LOG.info('Fetch the zone')
+        _, body = self.zones_client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial - 1, body['serial'])
+
+    @decorators.idempotent_id('4779dea3-0591-4219-a1d8-6581f907ecb1')
+    def test_create_zone_serial_number(self):
+        serial = 1234567
+        _, zone = self.zones_client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Ensure we respond with a right serial')
+        self.assertEqual(serial - 1, zone['serial'])
+
+        LOG.info('Fetch the zone')
+        _, body = self.zones_client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial - 1, body['serial'])
+
+    @decorators.idempotent_id('4283f440-990e-4097-9a92-7f8aa1638630')
+    def test_update_zone_serial_to_unixtime(self):
+        serial = 12345
+        LOG.info('Create a zone')
+        _, zone = self.zones_client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Update the zone')
+        _, zone = self.zones_client.update_zone(zone['id'], description="New description")
+
+        LOG.info('Ensure we respond with UPDATE+PENDING')
+        self.assertEqual('UPDATE', zone['action'])
+        self.assertEqual('PENDING', zone['status'])
+
+        LOG.info('Ensure we respond with updated values')
+        self.assertNotEqual(serial, zone['serial'])
+
+        LOG.info('Fetch the zone')
+        _, body = self.zones_client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertNotEqual(serial, body['serial'])
+
+    @decorators.idempotent_id('b4ef30c2-823f-47ca-9ef2-84348a77818c')
+    def test_update_zone_serial_to_number(self):
+        serial = 2147483646
+        LOG.info('Create a zone')
+        _, zone = self.zones_client.create_zone(serial=serial)
+        self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
+
+        LOG.info('Update the zone')
+        _, zone = self.zones_client.update_zone(
+            zone['id'], serial=serial)
+
+        LOG.info('Ensure we respond with UPDATE+PENDING')
+        self.assertEqual('UPDATE', zone['action'])
+        self.assertEqual('PENDING', zone['status'])
+
+        LOG.info('Ensure we respond with updated values')
+        self.assertEqual(serial - 1, zone['serial'])
+
+        LOG.info('Fetch the zone')
+        _, body = self.zones_client.show_zone(zone['id'])
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertEqual(serial - 1, body['serial'])
+
 
 class ZonesAdminTest(BaseZonesTest):
-    credentials = ["primary", "admin", "system_admin", "alt"]
 
     @classmethod
     def setup_credentials(cls):
@@ -643,7 +735,6 @@ class ZonesAdminTest(BaseZonesTest):
 
 
 class ZoneOwnershipTest(BaseZonesTest):
-    credentials = ["primary", "alt", "admin", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):
@@ -701,7 +792,6 @@ class ZoneOwnershipTest(BaseZonesTest):
 
 
 class ZonesNegativeTest(BaseZonesTest):
-    credentials = ["admin", "primary", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):

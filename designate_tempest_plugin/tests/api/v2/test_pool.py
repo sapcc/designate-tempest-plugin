@@ -36,8 +36,6 @@ class BasePoolTest(base.BaseDnsV2Test):
 
 
 class PoolAdminTest(BasePoolTest):
-    credentials = ["admin", "primary", "system_admin", "system_reader",
-                   "project_member", "project_reader", "alt"]
 
     @classmethod
     def setup_credentials(cls):
@@ -195,8 +193,6 @@ class PoolAdminTest(BasePoolTest):
 
 class TestPoolNotFoundAdmin(BasePoolTest):
 
-    credentials = ["admin", "system_admin", "primary"]
-
     @classmethod
     def setup_credentials(cls):
         # Do not create network resources for these test.
@@ -241,7 +237,6 @@ class TestPoolNotFoundAdmin(BasePoolTest):
 
 class TestPoolInvalidIdAdmin(BasePoolTest):
 
-    credentials = ["admin", "system_admin", "primary"]
 
     @classmethod
     def setup_credentials(cls):
@@ -288,7 +283,6 @@ class TestPoolInvalidIdAdmin(BasePoolTest):
 
 class TestPoolAdminNegative(BasePoolTest):
 
-    credentials = ["admin", "system_admin", "primary"]
 
     @classmethod
     def setup_credentials(cls):

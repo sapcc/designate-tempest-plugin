@@ -54,7 +54,7 @@ def rand_email(domain=None):
     :return: a random zone name e.g. example.org.
     :rtype: string
     """
-    domain = domain or rand_zone_name()
+    domain = domain or rand_zone_name(prefix='testdomain')
     return 'example@%s' % domain.rstrip('.')
 
 
@@ -74,7 +74,7 @@ def rand_zonefile_data(name=None, ttl=None):
     zone_base = ('$ORIGIN &\n& # IN SOA ns.& nsadmin.& # # # # #\n'
                  '& # IN NS ns.&\n& # IN MX 10 mail.&\nns.& 360 IN A 1.0.0.1')
     if name is None:
-        name = rand_zone_name()
+        name = rand_zone_name(prefix='testdomain')
     if ttl is None:
         ttl = rand_ttl()
 
@@ -275,6 +275,14 @@ def make_rand_recordset(zone_name, record_type):
 
     func = globals()["rand_{}_recordset".format(record_type.lower())]
     return func(zone_name)
+
+
+def rand_serial():
+    """Generate a random zone name
+    :return: a random serial
+    :rtype: string
+    """
+    return str(random.randint(1, 2147483646))
 
 
 def rand_string(size):

@@ -27,8 +27,8 @@ class ZonesClient(base.DnsClientV2Base):
     def create_zone(self, name=None, email=None, ttl=None, description=None,
                     attributes=None, wait_until=False,
                     zone_type=const.PRIMARY_ZONE_TYPE,
-                    primaries=None, params=None, project_id=None):
-
+                    primaries=None, params=None, project_id=None,
+                    serial=None):
         """Create a zone with the specified parameters.
 
         :param name: The name of the zone.
@@ -38,6 +38,8 @@ class ZonesClient(base.DnsClientV2Base):
         :param ttl: The ttl for the zone.
             Default: Random Value
         :param description: A description of the zone.
+            Default: Random Value
+        :param serial: A serial of the zone.
             Default: Random Value
         :param attributes: Key:Value pairs of information about this zone,
                and the pool the user would like to place the zone in.
@@ -67,6 +69,8 @@ class ZonesClient(base.DnsClientV2Base):
             'attributes': attributes or {
                 'attribute_key': data_utils.rand_name('attribute_value')}
         }
+        if serial:
+            zone['serial'] = serial
         # If SECONDARY, "email" and "ttl" cannot be supplied
         if zone_type == const.SECONDARY_ZONE_TYPE:
             zone['type'] = zone_type
@@ -159,7 +163,7 @@ class ZonesClient(base.DnsClientV2Base):
     @base.handle_errors
     def update_zone(self, uuid, email=None, ttl=None,
                     description=None, wait_until=False, params=None,
-                    headers=None):
+                    headers=None, serial=None):
         """Update a zone with the specified parameters.
         :param uuid: The unique identifier of the zone.
         :param email: The email for the zone.
@@ -167,6 +171,8 @@ class ZonesClient(base.DnsClientV2Base):
         :param ttl: The ttl for the zone.
             Default: Random Value
         :param description: A description of the zone.
+            Default: Random Value
+        :param serial: A serial of the zone.
             Default: Random Value
         :param wait_until: Block until the zone reaches the desiered status
         :param params: A Python dict that represents the query parameters to
@@ -179,7 +185,8 @@ class ZonesClient(base.DnsClientV2Base):
             'ttl': ttl or dns_data_utils.rand_ttl(),
             'description': description or data_utils.rand_name('test-zone'),
         }
-
+        if serial:
+            zone['serial'] = serial
         resp, body = self._update_request('zones', uuid, zone, params=params,
                                           headers=headers)
 

@@ -24,7 +24,6 @@ LOG = logging.getLogger(__name__)
 class TestDnsUnauthed(base.BaseDnsV2Test):
 
     client_manager = clients.ManagerV2Unauthed
-    credentials = ["primary"]
 
     @classmethod
     def setup_credentials(cls):

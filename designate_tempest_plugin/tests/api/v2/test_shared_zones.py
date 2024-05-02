@@ -30,9 +30,6 @@ CONF = config.CONF
 
 class BaseSharedZoneTest(base.BaseDnsV2Test):
 
-    credentials = ['admin', 'system_admin', 'system_reader', 'primary', 'alt',
-                   'project_reader', 'project_member', ['demo', 'member']]
-
     excluded_keys = ['links']
 
     @classmethod

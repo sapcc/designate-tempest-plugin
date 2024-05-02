@@ -26,7 +26,7 @@ LOG = logging.getLogger(__name__)
 
 
 class DesignateApiVersion(base.BaseDnsV2Test, service_base.DnsClientV2Base):
-    credentials = ['admin', 'primary']
+    credentials = ['admin', 'primary', ['cloud_dns_admin']]
 
     @classmethod
     def setup_credentials(cls):

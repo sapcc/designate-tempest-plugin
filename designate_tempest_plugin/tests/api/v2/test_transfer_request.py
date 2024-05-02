@@ -53,8 +53,6 @@ class BaseTransferRequestTest(base.BaseDnsV2Test):
 
 
 class TransferRequestTest(BaseTransferRequestTest):
-    credentials = ["primary", "alt", "admin", "system_admin", "system_reader",
-                   "project_member", "project_reader"]
 
     @classmethod
     def setup_credentials(cls):
@@ -485,7 +483,6 @@ class TransferRequestTest(BaseTransferRequestTest):
 
 
 class TestTransferRequestNotFound(BaseTransferRequestTest):
-    credentials = ["admin", "primary", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):
@@ -535,7 +532,6 @@ class TestTransferRequestNotFound(BaseTransferRequestTest):
 
 
 class TestTransferRequestInvalidId(BaseTransferRequestTest):
-    credentials = ["admin", "primary", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):

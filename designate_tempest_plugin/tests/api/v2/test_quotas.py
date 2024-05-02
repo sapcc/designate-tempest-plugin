@@ -29,8 +29,6 @@ quotas_types = ["api_export_size", "recordset_records",
 
 class QuotasV2Test(base.BaseDnsV2Test):
 
-    credentials = ["primary", "admin", "system_admin", "system_reader", "alt",
-                   "project_member", "project_reader"]
 
     @classmethod
     def setup_credentials(cls):
@@ -225,7 +223,6 @@ class QuotasV2Test(base.BaseDnsV2Test):
 
 class QuotasV2TestNegative(base.BaseDnsV2Test):
 
-    credentials = ["primary", "admin", "system_admin"]
 
     @classmethod
     def setup_credentials(cls):
