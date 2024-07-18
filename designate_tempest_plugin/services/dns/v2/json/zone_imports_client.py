@@ -21,7 +21,7 @@ class ZoneImportsClient(base.DnsClientV2Base):
 
     @base.handle_errors
     def create_zone_import(self, zonefile_data=None,
-                           params=None, wait_until=None):
+                           params=None, wait_until=None, force=False):
         """Create a zone import.
         :param zonefile_data: A tuple that represents zone data.
         :param params: A Python dict that represents the query paramaters to
@@ -30,6 +30,8 @@ class ZoneImportsClient(base.DnsClientV2Base):
         """
 
         headers = {'Content-Type': 'text/dns'}
+        if force:
+            headers['X-Designate-Force-Import'] = True
         zone_data = zonefile_data or dns_data_utils.rand_zonefile_data()
         resp, body = self._create_request(
             'zones/tasks/imports', zone_data, headers=headers)
