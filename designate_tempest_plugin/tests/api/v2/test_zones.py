@@ -12,13 +12,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 from oslo_log import log as logging
-from oslo_utils import timeutils
 from tempest.lib import decorators
 from tempest.lib import exceptions as lib_exc
 from tempest.lib.common.utils import data_utils
 
 from designate_tempest_plugin import data_utils as dns_data_utils
 from designate_tempest_plugin.tests import base
+from designate_tempest_plugin.common.waiters import wait_for_zone_status
 
 LOG = logging.getLogger(__name__)
 
@@ -131,6 +131,9 @@ class ZonesTest(BaseZonesTest):
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
+        wait_for_zone_status(
+            self.client, zone['id'], 'ACTIVE')
+
         LOG.info('Ensure we respond with updated serial')
         self.assertEqual(serial - 1, body['serial'])
 
@@ -146,6 +149,9 @@ class ZonesTest(BaseZonesTest):
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
+        wait_for_zone_status(
+            self.client, zone['id'], 'ACTIVE')
+
         LOG.info('Ensure we respond with updated serial')
         self.assertEqual(serial - 1, body['serial'])
 
@@ -160,6 +166,9 @@ class ZonesTest(BaseZonesTest):
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
+
+        wait_for_zone_status(
+            self.client, zone['id'], 'ACTIVE')
 
         LOG.info('Ensure we respond with updated serial')
         self.assertEqual(serial - 1, body['serial'])
@@ -184,6 +193,9 @@ class ZonesTest(BaseZonesTest):
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
+        wait_for_zone_status(
+            self.client, zone['id'], 'ACTIVE')
+
         LOG.info('Ensure we respond with updated serial')
         self.assertNotEqual(serial, body['serial'])
 
@@ -207,6 +219,9 @@ class ZonesTest(BaseZonesTest):
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
+
+        wait_for_zone_status(
+            self.client, zone['id'], 'ACTIVE')
 
         LOG.info('Ensure we respond with updated serial')
         self.assertEqual(serial - 1, body['serial'])
