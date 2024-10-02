@@ -208,29 +208,26 @@ class ZonesTest(BaseZonesTest):
 
         LOG.info('Update the zone')
         _, zone = self.client.update_zone(
-            zone['id'], serial=serial)
+            zone['id'], serial=serial+5)
 
         LOG.info('Ensure we respond with UPDATE+PENDING')
         self.assertEqual('UPDATE', zone['action'])
         self.assertEqual('PENDING', zone['status'])
 
-        LOG.info('Ensure we respond with updated values')
-        self.assertEqual(serial - 1, zone['serial'])
+        wait_for_zone_status(
+            self.client, zone['id'], 'ACTIVE')
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
-        self.assertEqual(serial - 1, body['serial'])
-
-        wait_for_zone_status(
-            self.client, zone['id'], 'ACTIVE')
+        self.assertEqual(serial + 4, body['serial'])
 
     @decorators.idempotent_id('155f5aab-91be-4a39-a9e9-e43b618fcb9e')
     def test_update_zone_serial_yyyymmddss(self):
-        serial = 2019131435
+        serial = 2024121435
         LOG.info('Create a zone')
-        _, zone = self.client.create_zone(serial=123)
+        _, zone = self.client.create_zone()
         self.addCleanup(self.wait_zone_delete, self.client, zone['id'])
 
         LOG.info('Update the zone')

@@ -116,6 +116,8 @@ class ZonesClient(base.DnsClientV2Base):
             'ttl': ttl or dns_data_utils.rand_ttl(),
             'description': description or data_utils.rand_name('test-zone'),
         }
+        if serial:
+            zone['serial'] = serial
 
         resp, body = self._update_request('zones', uuid, zone, params=params)
 
