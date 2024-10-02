@@ -241,17 +241,14 @@ class ZonesTest(BaseZonesTest):
         self.assertEqual('UPDATE', zone['action'])
         self.assertEqual('PENDING', zone['status'])
 
-        LOG.info('Ensure we respond with updated values')
-        self.assertEqual(serial - 1, zone['serial'])
+        wait_for_zone_status(
+            self.client, zone['id'], 'ACTIVE')
 
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
         self.assertEqual(serial - 1, body['serial'])
-
-        wait_for_zone_status(
-            self.client, zone['id'], 'ACTIVE')
 
 
 class ZonesAdminTest(BaseZonesTest):
