@@ -85,4 +85,11 @@ DnsFeatureGroup = [
                 default=True,
                 help="Is https://bugs.launchpad.net/designate/+bug/1573141 "
                 "fixed"),
+    cfg.BoolOpt('bug_1932026_fixed',
+                default=False,
+                help="Is https://bugs.launchpad.net/designate/+bug/1932026 "
+                     "fixed"),
+    cfg.StrOpt('tld_suffix',
+               default='test',
+               help="TLD suffix that used in all tests (if not overridden).")
 ]
