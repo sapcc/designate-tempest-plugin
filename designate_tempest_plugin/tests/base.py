@@ -110,6 +110,42 @@ class BaseDnsTest(test.BaseTestCase):
         return utils.call_and_ignore_notfound_exc(zone_client.show_zone,
                                                   zone_id) is None
 
+    def wait_zone_delete(self, zone_client, zone_id, **kwargs):
+        self._delete_zone(zone_client, zone_id, **kwargs)
+        utils.call_until_true(self._check_zone_deleted,
+                              CONF.dns.build_timeout,
+                              CONF.dns.build_interval,
+                              zone_client,
+                              zone_id)
+    def wait_recordset_delete(self, recordset_client, zone_id,
+                              recordset_id, **kwargs):
+        self._delete_recordset(
+            recordset_client, zone_id, recordset_id, **kwargs)
+        utils.call_until_true(self._check_recordset_deleted,
+                              CONF.dns.build_timeout,
+                              CONF.dns.build_interval,
+                              recordset_client,
+                              zone_id,
+                              recordset_id)
+
+    def unset_ptr(self, ptr_client, fip_id, **kwargs):
+        return utils.call_and_ignore_notfound_exc(
+            ptr_client.unset_ptr_record, fip_id, **kwargs)
+
+    def _delete_zone(self, zone_client, zone_id, **kwargs):
+        return utils.call_and_ignore_notfound_exc(zone_client.delete_zone,
+                                                  zone_id, **kwargs)
+
+    def _delete_recordset(self, recordset_client, zone_id,
+                          recordset_id, **kwargs):
+        return utils.call_and_ignore_notfound_exc(
+            recordset_client.delete_recordset,
+            zone_id, recordset_id, **kwargs)
+    def _check_recordset_deleted(
+            self, recordset_client, zone_id, recordset_id):
+        return utils.call_and_ignore_notfound_exc(
+            recordset_client.show_recordset, zone_id, recordset_id) is None
+
 
 class BaseDnsV1Test(BaseDnsTest):
     """Base class for DNS V1 API tests."""

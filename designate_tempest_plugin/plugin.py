@@ -91,7 +91,7 @@ class DesignateTempestPlugin(plugins.TempestPlugin):
                              'RecordsetClient', 'TldClient',
                              'TransferAcceptClient', 'TransferRequestClient',
                              'TsigkeyClient', 'ZoneExportsClient',
-                             'ZoneImportsClient', 'ZonesClient']
+                             'ZoneImportsClient', 'ZonesClient', 'PtrClient']
         }
         admin_params.update(dns_config)
         v2_params.update(dns_config)
