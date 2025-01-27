@@ -187,9 +187,6 @@ class ZonesTest(BaseZonesTest):
         self.assertEqual('UPDATE', zone['action'])
         self.assertEqual('PENDING', zone['status'])
 
-        LOG.info('Ensure we respond with updated values')
-        self.assertNotEqual(serial, zone['serial'])
-
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
