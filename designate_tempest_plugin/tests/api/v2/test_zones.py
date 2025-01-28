@@ -195,6 +195,8 @@ class ZonesTest(BaseZonesTest):
 
         wait_for_zone_serial(self.client, zone['id'], serial + 1)
 
+        _, body = self.client.show_zone(zone['id'])
+
         LOG.info('Ensure we respond with updated serial')
         self.assertNotEqual(serial, body['serial'])
 
