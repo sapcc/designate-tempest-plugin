@@ -18,14 +18,14 @@ from tempest.lib.common.utils import data_utils
 
 from designate_tempest_plugin import data_utils as dns_data_utils
 from designate_tempest_plugin.tests import base
-from designate_tempest_plugin.common.waiters import wait_for_zone_status
+from designate_tempest_plugin.common.waiters import wait_for_zone_status, wait_for_zone_serial
 
 LOG = logging.getLogger(__name__)
 
 
 class BaseZonesTest(base.BaseDnsV2Test):
     excluded_keys = ['created_at', 'updated_at', 'version', 'links',
-                    'status', 'action']
+                     'status', 'action']
 
 
 class ZonesTest(BaseZonesTest):
@@ -187,17 +187,18 @@ class ZonesTest(BaseZonesTest):
         self.assertEqual('UPDATE', zone['action'])
         self.assertEqual('PENDING', zone['status'])
 
-        LOG.info('Ensure we respond with updated values')
-        self.assertNotEqual(serial, zone['serial'])
-
         LOG.info('Fetch the zone')
+        _, body = self.client.show_zone(zone['id'])
+
+        wait_for_zone_status(
+            self.client, zone['id'], 'ACTIVE')
+
+        wait_for_zone_serial(self.client, zone['id'], serial + 1)
+
         _, body = self.client.show_zone(zone['id'])
 
         LOG.info('Ensure we respond with updated serial')
         self.assertNotEqual(serial, body['serial'])
-
-        wait_for_zone_status(
-            self.client, zone['id'], 'ACTIVE')
 
     @decorators.idempotent_id('b4ef30c2-823f-47ca-9ef2-84348a77818c')
     def test_update_zone_serial_to_number(self):
