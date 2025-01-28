@@ -18,14 +18,14 @@ from tempest.lib.common.utils import data_utils
 
 from designate_tempest_plugin import data_utils as dns_data_utils
 from designate_tempest_plugin.tests import base
-from designate_tempest_plugin.common.waiters import wait_for_zone_status
+from designate_tempest_plugin.common.waiters import wait_for_zone_status, wait_for_zone_serial
 
 LOG = logging.getLogger(__name__)
 
 
 class BaseZonesTest(base.BaseDnsV2Test):
     excluded_keys = ['created_at', 'updated_at', 'version', 'links',
-                    'status', 'action']
+                     'status', 'action']
 
 
 class ZonesTest(BaseZonesTest):
@@ -192,6 +192,8 @@ class ZonesTest(BaseZonesTest):
 
         wait_for_zone_status(
             self.client, zone['id'], 'ACTIVE')
+
+        wait_for_zone_serial(self.client, zone['id'], serial + 1)
 
         LOG.info('Ensure we respond with updated serial')
         self.assertNotEqual(serial, body['serial'])
