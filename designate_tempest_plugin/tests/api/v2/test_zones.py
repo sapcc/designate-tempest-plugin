@@ -190,11 +190,11 @@ class ZonesTest(BaseZonesTest):
         LOG.info('Fetch the zone')
         _, body = self.client.show_zone(zone['id'])
 
-        LOG.info('Ensure we respond with updated serial')
-        self.assertNotEqual(serial, body['serial'])
-
         wait_for_zone_status(
             self.client, zone['id'], 'ACTIVE')
+
+        LOG.info('Ensure we respond with updated serial')
+        self.assertNotEqual(serial, body['serial'])
 
     @decorators.idempotent_id('b4ef30c2-823f-47ca-9ef2-84348a77818c')
     def test_update_zone_serial_to_number(self):
