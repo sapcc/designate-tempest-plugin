@@ -258,3 +258,35 @@ def wait_for_ptr_status(client, fip_id, status):
                 message = '(%s) %s' % (caller, message)
 
             raise lib_exc.TimeoutException(message)
+
+
+def wait_for_zone_serial(client, zone_id, serial):
+    """Waits for a zone to reach given serial."""
+    LOG.info('Waiting for zone %s to have serial %s', zone_id, serial)
+
+    _, zone = client.show_zone(zone_id)
+    start = int(time.time())
+
+    while zone['status'] != serial:
+        time.sleep(client.build_interval)
+        _, zone = client.show_zone(zone_id)
+        serial_curr = zone['serial']
+        if serial_curr == serial:
+            LOG.info('Zone %s reached serial %s', zone_id, serial)
+            return
+
+        if int(time.time()) - start >= client.build_timeout:
+            message = ('Zone %(zone_id)s failed to reach serial=%(serial)s '
+                       'within the required time (%(timeout)s s). Current '
+                       'serial: %(serial_curr)s' %
+                       {'zone_id': zone_id,
+                        'serial': serial,
+                        'serial_curr': serial_curr,
+                        'timeout': client.build_timeout})
+
+            caller = test_utils.find_test_caller()
+
+            if caller:
+                message = '(%s) %s' % (caller, message)
+
+            raise lib_exc.TimeoutException(message)
