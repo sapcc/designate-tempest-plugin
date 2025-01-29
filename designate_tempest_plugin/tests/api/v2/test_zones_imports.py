@@ -187,7 +187,7 @@ delegation.{zone_name} IN NS       ns1.{zone_name}\n
             force=True,
             zonefile_data=new_zonefile
         )
-        waiters.wait_for_zone_import_status(self.client, zone_import_new['id'],
+        waiters.wait_for_zone_import_status(self.zone_client, zone_import_new['id'],
                                             "COMPLETE")
         _, new_recordsets = self.recordset_client.list_recordset(zone_import['zone_id'])
         records = [
