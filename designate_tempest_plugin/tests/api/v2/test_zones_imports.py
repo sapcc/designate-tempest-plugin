@@ -146,14 +146,18 @@ delegation.{name} IN NS       ns1.{name}\n
         LOG.info('Create a zone import')
         zone_name = rand_zone_name()
         zonefile_data = self.generate_zonefile(zone_name)
-        _, zone_import = self.client.create_zone_import(zonefile_data=zonefile_data)
+        _, zone_import = self.client.create_zone_import(
+            zonefile_data=zonefile_data
+        )
         self.addCleanup(self.clean_up_resources, zone_import['id'])
         waiters.wait_for_zone_import_status(self.client, zone_import['id'],
                                             "COMPLETE")
         _, zone_import = self.client.show_zone_import(zone_import['id'])
         LOG.info('Ensure zone import COMPLETE')
         self.assertEqual('COMPLETE', zone_import['status'])
-        _, recordsets = self.recordset_client.list_recordset(zone_import['zone_id'])
+        _, recordsets = self.recordset_client.list_recordset(
+            zone_import['zone_id']
+        )
         LOG.info('Create a zone import with force flag')
         new_zonefile = f"""$ORIGIN {zone_name}\n
 {zone_name} 600 IN SOA ns1.{zone_name} nsadmin.{zone_name} (\n
@@ -174,10 +178,21 @@ _http._tcp.{zone_name} IN SRV      10  0   80  192.0.0.4\n
 delegation.{zone_name} IN NS       ns1.{zone_name}\n
 1.0.0.192.in-addr.arpa. IN PTR      ipv4.{zone_name}\n
 """
-        _, zone_import_new = self.client.create_zone_import(force=True, zonefile_data=new_zonefile)
+        waiters.wait_for_zone_status(
+            self.zone_client,
+            zone_import['zone_id'],
+            "ACTIVE"
+        )
+        _, zone_import_new = self.client.create_zone_import(
+            force=True,
+            zonefile_data=new_zonefile
+        )
         waiters.wait_for_zone_import_status(self.client, zone_import_new['id'],
                                             "COMPLETE")
         _, new_recordsets = self.recordset_client.list_recordset(zone_import['zone_id'])
-        records = [record for recordset in new_recordsets['recordsets'] for record in recordset['records']]
+        records = [
+            record for recordset in new_recordsets['recordsets']
+            for record in recordset['records']
+        ]
         LOG.debug(f"Recordset records {records}")
         self.assertEqual(len(records), 11)
