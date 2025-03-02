@@ -31,6 +31,12 @@ class SharedZonesTest(base.BaseDnsV2Test):
     credentials = ['primary', 'admin']
 
     @classmethod
+    def setup_credentials(cls):
+        # Do not create network resources for these test.
+        cls.set_network_resources()
+        super(SharedZonesTest, cls).setup_credentials()
+
+    @classmethod
     def setup_clients(cls):
         super(SharedZonesTest, cls).setup_clients()
         cls.admin_tld_client = cls.os_admin.tld_client
