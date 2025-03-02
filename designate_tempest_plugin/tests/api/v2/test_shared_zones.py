@@ -34,6 +34,11 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
     excluded_keys = ['links']
 
     @classmethod
+    def setup_credentials(cls):
+        cls.set_network_resources()
+        super(BaseSharedZoneTest, cls).setup_credentials()
+
+    @classmethod
     def resource_setup(cls):
         super(BaseSharedZoneTest, cls).resource_setup()
 
@@ -75,7 +80,6 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
 
 class SharedZonesTest(BaseSharedZoneTest):
     credentials = ['primary', 'admin']
-
 
     @classmethod
     def setup_credentials(cls):

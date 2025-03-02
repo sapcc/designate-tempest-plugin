@@ -117,6 +117,7 @@ class BaseDnsTest(test.BaseTestCase):
                               CONF.dns.build_interval,
                               zone_client,
                               zone_id)
+
     def wait_recordset_delete(self, recordset_client, zone_id,
                               recordset_id, **kwargs):
         self._delete_recordset(
