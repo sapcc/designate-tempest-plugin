@@ -29,7 +29,7 @@ CONF = config.CONF
 
 
 class BaseSharedZoneTest(base.BaseDnsV2Test):
-    credentials = ['primary', 'admin', 'alt']
+    credentials = ['primary', 'admin', 'alt', 'demo']
 
     excluded_keys = ['links']
 
@@ -144,7 +144,6 @@ class SharedZonesTest(BaseSharedZoneTest):
             self.zone['id'], self.alt_zone_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
                         self.zone['id'], shared_zone['id'])
-
 
         shared_zone = self.share_zone_client.create_zone_share(
             self.zone['id'], self.demo_zone_client.project_id)[1]

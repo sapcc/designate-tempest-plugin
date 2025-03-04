@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SharedZonesTest(base.BaseDnsV2Test):
-    credentials = ['primary', 'admin', 'alt']
+    credentials = ['primary', 'admin', 'alt', 'demo']
 
     @classmethod
     def setup_credentials(cls):
