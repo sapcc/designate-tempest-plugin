@@ -51,11 +51,11 @@ class SharedZonesTest(base.BaseDnsV2Test):
     def resource_setup(cls):
         super(SharedZonesTest, cls).resource_setup()
 
-        if not versionutils.is_compatible('2.1', cls.api_version,
-                                          same_major=False):
-            raise cls.skipException(
-                'The shared zones scenario tests require Designate API '
-                'version 2.1 or newer. Skipping Shared Zones scenario tests.')
+        # if not versionutils.is_compatible('2.1', cls.api_version,
+        #                                   same_major=False):
+        #     raise cls.skipException(
+        #         'The shared zones scenario tests require Designate API '
+        #         'version 2.1 or newer. Skipping Shared Zones scenario tests.')
 
         # Make sure we have an allowed TLD available
         tld_name = dns_data_utils.rand_zone_name(name='SharedZonesTest')
