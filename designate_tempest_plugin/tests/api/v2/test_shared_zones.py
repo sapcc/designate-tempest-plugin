@@ -29,7 +29,7 @@ CONF = config.CONF
 
 
 class BaseSharedZoneTest(base.BaseDnsV2Test):
-    credentials = ['primary', 'admin', 'alt', 'demo']
+    credentials = ['primary', 'admin', 'alt', ['demo']]
 
     excluded_keys = ['links']
 
@@ -79,7 +79,7 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
 
 
 class SharedZonesTest(BaseSharedZoneTest):
-    credentials = ['primary', 'admin', 'alt']
+    credentials = ['primary', 'admin', 'alt', ['demo']]
 
     @classmethod
     def setup_credentials(cls):
@@ -163,7 +163,7 @@ class SharedZonesTest(BaseSharedZoneTest):
 
 class NegativeSharedZonesTest(BaseSharedZoneTest):
 
-    credentials = ['primary', 'admin', 'alt']
+    credentials = ['primary', 'admin', 'alt', ['demo']]
 
     @classmethod
     def setup_credentials(cls):
