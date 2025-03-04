@@ -39,6 +39,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
     @classmethod
     def setup_clients(cls):
         super(SharedZonesTest, cls).setup_clients()
+        cls.zones_client = cls.os_primary.zones_client
         cls.admin_tld_client = cls.os_admin.tld_client
         cls.adm_shr_client = cls.os_admin.shared_zones_client
         cls.share_zone_client = cls.os_primary.shared_zones_client
