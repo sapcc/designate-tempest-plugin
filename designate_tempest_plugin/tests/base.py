@@ -98,14 +98,6 @@ class BaseDnsTest(test.BaseTestCase):
         with context:
             callable_(*args, **kwargs)
 
-    def wait_zone_delete(self, zone_client, zone_id, **kwargs):
-        zone_client.delete_zone(zone_id, **kwargs)
-        utils.call_until_true(self._check_zone_deleted,
-                              CONF.dns.build_timeout,
-                              CONF.dns.build_interval,
-                              zone_client,
-                              zone_id)
-
     def _check_zone_deleted(self, zone_client, zone_id):
         return utils.call_and_ignore_notfound_exc(zone_client.show_zone,
                                                   zone_id) is None
@@ -166,6 +158,9 @@ class BaseDnsV1Test(BaseDnsTest):
 
 class BaseDnsV2Test(BaseDnsTest):
     """Base class for DNS V2 API tests."""
+
+    all_projects_header = {'X-Auth-All-Projects': True}
+    managed_records = {'x-designate-edit-managed-records': True}
 
     # Use the Designate V2 Client Manager
     client_manager = clients.ManagerV2
