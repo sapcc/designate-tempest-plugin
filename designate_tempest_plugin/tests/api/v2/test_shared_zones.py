@@ -14,7 +14,6 @@
 
 from oslo_log import log as logging
 from oslo_utils import uuidutils
-from oslo_utils import versionutils
 from tempest import config
 from tempest.lib.common.utils import data_utils
 from tempest.lib import decorators
@@ -244,13 +243,7 @@ class AdminSharedZonesTest(BaseSharedZoneTest):
         LOG.info(
             'Admin user creates shared zone for Alt tenant '
             'using "x-auth-all-projects" header')
-        # Scoped tokens do not have a project ID, work around that here
-        if CONF.enforce_scope.designate:
-            headers = self.all_projects_header.copy()
-            headers.update(
-                {'x-auth-sudo-project-id': self.share_zone_client.project_id})
-        else:
-            headers = self.all_projects_header
+        headers = self.all_projects_header
 
         shared_zone = self.adm_shr_client.create_zone_share(
             self.zone['id'], self.alt_zone_client.project_id,
@@ -260,11 +253,7 @@ class AdminSharedZonesTest(BaseSharedZoneTest):
             shared_zone['id'], headers=self.all_projects_header)
         self.assertTrue(uuidutils.is_uuid_like(shared_zone['id']))
         self.assertEqual(self.zone['id'], shared_zone['zone_id'])
-        if CONF.enforce_scope.designate:
-            self.assertEqual(self.share_zone_client.project_id,
-                             shared_zone['project_id'])
-        else:
-            self.assertEqual(self.adm_shr_client.project_id,
+        self.assertEqual(self.adm_shr_client.project_id,
                              shared_zone['project_id'])
         self.assertEqual(self.alt_zone_client.project_id,
                          shared_zone['target_project_id'])
@@ -301,13 +290,7 @@ class AdminSharedZonesTest(BaseSharedZoneTest):
             'Admin user creates shared zone for Alt tenant'
             ' using "x-auth-all-projects" header')
         # Scoped tokens do not have a project ID, work around that here
-        if CONF.enforce_scope.designate:
-            headers = self.all_projects_header.copy()
-            headers.update(
-                {'x-auth-sudo-project-id': self.share_zone_client.project_id})
-        else:
-            headers = self.all_projects_header
-
+        headers = self.all_projects_header
         shared_zone = self.adm_shr_client.create_zone_share(
             self.zone['id'], self.alt_zone_client.project_id,
             headers=headers)[1]
@@ -348,13 +331,7 @@ class AdminSharedZonesTest(BaseSharedZoneTest):
         LOG.info(
             "Admin user shares Primary's zone with Alt tenant"
             " using 'x-auth-all-projects' header")
-        # Scoped tokens do not have a project ID, work around that here
-        if CONF.enforce_scope.designate:
-            headers = self.all_projects_header.copy()
-            headers.update(
-                {'x-auth-sudo-project-id': self.share_zone_client.project_id})
-        else:
-            headers = self.all_projects_header
+        headers = self.all_projects_header
 
         shared_zone = self.adm_shr_client.create_zone_share(
             self.zone['id'], self.alt_zone_client.project_id,
