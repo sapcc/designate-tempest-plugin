@@ -156,7 +156,7 @@ class SharedZonesTest(BaseSharedZoneTest):
     @decorators.idempotent_id('55a44bbe-e14d-4d2a-9421-9980898a0b1d')
     def test_list_shares(self):
         shares = self.share_zone_client.list_shares()
-        zone_ids = [zone['id'] for zone in shares]
+        zone_ids = [zone['id'] for zone in shares['shared_zones']]
         self.assertIn(self.zone['id'], zone_ids)
 
 
