@@ -157,7 +157,7 @@ class SharedZonesTest(BaseSharedZoneTest):
     def test_list_shares(self):
         shares = self.share_zone_client.list_shares()
         LOG.info(f"List of shares {shares}")
-        self.assertTrue(shares[1]['shared_zones'])
+        self.assertNotEmpty(shares[1]['shared_zones'])
 
 
 class NegativeSharedZonesTest(BaseSharedZoneTest):
