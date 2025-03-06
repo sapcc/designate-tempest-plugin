@@ -41,19 +41,13 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
     def resource_setup(cls):
         super(BaseSharedZoneTest, cls).resource_setup()
 
-        # if not versionutils.is_compatible('2.1', cls.api_version,
-        #                                   same_major=False):
-        #     raise cls.skipException(
-        #         'The shared zones API tests require Designate API version '
-        #         '2.1 or newer. Skipping Shared Zones API tests.')
-
         # Make sure we have an allowed TLD available
         tld_name = dns_data_utils.rand_zone_name(name="APISharedZoneTest")
         cls.tld_name = f".{tld_name}"
         cls.class_tld = cls.admin_tld_client.create_tld(tld_name=tld_name[:-1])
 
         # All the shared zone tests need a zone, create one to share
-        zone_name = dns_data_utils.rand_zone_name(name="TestZone",
+        zone_name = dns_data_utils.rand_zone_name(name="testdomain",
                                                   suffix=cls.tld_name)
         LOG.info('Create a zone: %s', zone_name)
         cls.zone = cls.zones_client.create_zone(name=zone_name)[1]
@@ -69,12 +63,12 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
     def setup_clients(cls):
         super(BaseSharedZoneTest, cls).setup_clients()
         cls.zones_client = cls.os_primary.zones_client
+        cls.share_zone_client = cls.os_primary.shared_zones_client
         cls.admin_tld_client = cls.os_admin.tld_client
         cls.adm_shr_client = cls.os_admin.shared_zones_client
         cls.alt_zone_client = cls.os_alt.zones_client
         cls.demo_zone_client = cls.os_demo.zones_client
-        cls.share_zone_client = cls.os_primary.shared_zones_client
-        cls.alt_share_zone_client = cls.os_alt.shared_zones_client
+        cls.alt_share_zone_client = cls.os_primary.shared_zones_client
 
 
 class SharedZonesTest(BaseSharedZoneTest):
@@ -134,8 +128,8 @@ class SharedZonesTest(BaseSharedZoneTest):
 
         LOG.info('Ensure the zone share was deleted')
         self.assertRaises(lib_exc.NotFound,
-            self.share_zone_client.show_zone_share,
-            self.zone['id'], shared_zone['id'])
+                          self.share_zone_client.show_zone_share,
+                          self.zone['id'], shared_zone['id'])
 
     @decorators.idempotent_id('707bfa4f-f15b-4486-ba5c-0e5991f0f3a5')
     def test_list_zone_shares(self):
@@ -158,6 +152,12 @@ class SharedZonesTest(BaseSharedZoneTest):
             targets.append(share['target_project_id'])
         self.assertIn(self.alt_zone_client.project_id, targets)
         self.assertIn(self.demo_zone_client.project_id, targets)
+
+    @decorators.idempotent_id('55a44bbe-e14d-4d2a-9421-9980898a0b1d')
+    def test_list_shares(self):
+        shares = self.share_zone_client.list_shares()
+        zone_ids = [zone['id'] for zone in shares]
+        self.assertIn(self.zone['id'], zone_ids)
 
 
 class NegativeSharedZonesTest(BaseSharedZoneTest):
@@ -184,8 +184,15 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
 
     @decorators.idempotent_id('f4354b5c-8dbb-4bb9-8025-f65f8f2b21fb')
     def test_target_project_cannot_update_zone(self):
+        zone_name = dns_data_utils.rand_zone_name(name="testdomain",
+                                                  suffix=self.tld_name)
+        zone = self.zones_client.create_zone(name=zone_name)[1]
+        self.addCleanup(self.zones_client.delete_zone,
+                        self.zone['id'],
+                        ignore_errors=lib_exc.NotFound,
+                        delete_shares=True)
         shared_zone = self.share_zone_client.create_zone_share(
-            self.zone['id'], self.alt_zone_client.project_id)[1]
+            zone['id'], self.alt_zone_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
                         self.zone['id'], shared_zone['id'])
 
@@ -196,8 +203,15 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
 
     @decorators.idempotent_id('4389a12b-8609-493c-9640-d3c67b625022')
     def test_target_project_share_permissions(self):
+        zone_name = dns_data_utils.rand_zone_name(name="testdomain",
+                                                  suffix=self.tld_name)
+        zone = self.zones_client.create_zone(name=zone_name)[1]
+        self.addCleanup(self.zones_client.delete_zone,
+                        self.zone['id'],
+                        ignore_errors=lib_exc.NotFound,
+                        delete_shares=True)
         shared_zone = self.share_zone_client.create_zone_share(
-            self.zone['id'], self.alt_zone_client.project_id)[1]
+            zone['id'], self.alt_zone_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
                         self.zone['id'], shared_zone['id'])
 

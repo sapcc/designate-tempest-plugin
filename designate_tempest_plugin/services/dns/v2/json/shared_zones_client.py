@@ -78,3 +78,14 @@ class SharedZonesClient(base.DnsClientV2Base):
         self.expected_success(204, resp.status)
 
         return resp, body
+
+    @base.handle_errors
+    def list_shares(self, params=None, headers=None):
+        """List all zone shares
+
+        :param params: A Python dict that represents the query parameters to
+                       include in the request URI.
+        :param headers: (dict): The headers to use for the request.
+        :return: Zone shares list.
+        """
+        return self._list_request('zones/shares', params=params, headers=headers)
