@@ -368,7 +368,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
 
 
 class SharedZonesTestNegative(base.BaseDnsV2Test):
-    credentials = ['primary', 'admin']
+    credentials = ['primary', 'admin', 'alt', ['demo']]
 
     @classmethod
     def setup_clients(cls):
