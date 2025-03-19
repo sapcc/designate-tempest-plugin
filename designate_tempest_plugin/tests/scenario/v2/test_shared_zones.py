@@ -13,7 +13,6 @@
 # under the License.
 
 from oslo_log import log as logging
-from oslo_utils import versionutils
 from tempest import config
 from tempest.lib import decorators
 from tempest.lib import exceptions as lib_exc
@@ -51,12 +50,6 @@ class SharedZonesTest(base.BaseDnsV2Test):
     @classmethod
     def resource_setup(cls):
         super(SharedZonesTest, cls).resource_setup()
-
-        # if not versionutils.is_compatible('2.1', cls.api_version,
-        #                                   same_major=False):
-        #     raise cls.skipException(
-        #         'The shared zones scenario tests require Designate API '
-        #         'version 2.1 or newer. Skipping Shared Zones scenario tests.')
 
         # Make sure we have an allowed TLD available
         tld_name = dns_data_utils.rand_zone_name(name='testdomain')
@@ -386,11 +379,6 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
     @classmethod
     def resource_setup(cls):
         super(SharedZonesTestNegative, cls).resource_setup()
-        if not versionutils.is_compatible('2.1', cls.api_version,
-                                          same_major=False):
-            raise cls.skipException(
-                'The shared zones scenario tests require Designate API '
-                'version 2.1 or newer. Skipping Shared Zones scenario tests.')
 
         # Make sure we have an allowed TLD available
         tld_name = dns_data_utils.rand_zone_name(name='SharedZonesTest')
