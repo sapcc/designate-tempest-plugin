@@ -18,6 +18,9 @@ from oslo_log import log as logging
 from tempest.lib.common.utils import test_utils
 from tempest.lib import exceptions as lib_exc
 
+from designate_tempest_plugin.common import constants as const
+from designate_tempest_plugin.common import exceptions
+
 LOG = logging.getLogger(__name__)
 
 
@@ -51,20 +54,24 @@ def wait_for_zone_404(client, zone_id):
             raise lib_exc.TimeoutException(message)
 
 
-def wait_for_zone_status(client, zone_id, status):
+def wait_for_zone_status(client, zone_id, status, headers=None):
     """Waits for a zone to reach given status."""
     LOG.info('Waiting for zone %s to reach %s', zone_id, status)
 
-    _, zone = client.show_zone(zone_id)
+    zone = client.show_zone(zone_id, headers=headers)[1]
     start = int(time.time())
 
     while zone['status'] != status:
         time.sleep(client.build_interval)
-        _, zone = client.show_zone(zone_id)
+        zone = client.show_zone(zone_id, headers=headers)[1]
         status_curr = zone['status']
         if status_curr == status:
             LOG.info('Zone %s reached %s', zone_id, status)
             return
+
+        if zone['status'] == const.ERROR:
+            raise exceptions.InvalidStatusError('Zone', zone_id,
+                                                zone['status'])
 
         if int(time.time()) - start >= client.build_timeout:
             message = ('Zone %(zone_id)s failed to reach status=%(status)s '
