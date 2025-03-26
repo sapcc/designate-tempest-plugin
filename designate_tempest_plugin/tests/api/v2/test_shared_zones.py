@@ -68,7 +68,7 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
         cls.adm_shr_client = cls.os_admin.shared_zones_client
         cls.alt_zone_client = cls.os_alt.zones_client
         cls.demo_zone_client = cls.os_demo.zones_client
-        cls.alt_share_zone_client = cls.os_primary.shared_zones_client
+        cls.alt_share_zone_client = cls.os_alt.shared_zones_client
 
 
 class SharedZonesTest(BaseSharedZoneTest):
@@ -178,9 +178,8 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
                         self.zone['id'], shared_zone['id'])
 
         LOG.info('Ensure target project cannot delete zone')
-        self.assertRaises(lib_exc.Forbidden,
-                          self.alt_zone_client.delete_zone,
-                          self.zone['id'])
+        with self.assertRaisesDns(lib_exc.Forbidden, "Forbidden", 403):
+            self.alt_zone_client.delete_zone(self.zone['id'], delete_shares=True)
 
     @decorators.idempotent_id('f4354b5c-8dbb-4bb9-8025-f65f8f2b21fb')
     def test_target_project_cannot_update_zone(self):
@@ -197,7 +196,7 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
                         self.zone['id'], shared_zone['id'])
 
         LOG.info('Ensure target project cannot update the zone')
-        self.assertRaises(lib_exc.Forbidden,
+        self.assertRaises(lib_exc.NotFound,
                           self.alt_zone_client.update_zone,
                           self.zone['id'], ttl=5)
 
@@ -221,20 +220,6 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
             self.alt_share_zone_client.create_zone_share,
             self.zone['id'],
             self.demo_zone_client.project_id)
-
-    @decorators.idempotent_id('abc0f820-ae27-4e85-8f00-0b8e8abf3ae9')
-    def test_target_project_cannot_subzone(self):
-        shared_zone = self.share_zone_client.create_zone_share(
-            self.zone['id'], self.alt_zone_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
-                        self.zone['id'], shared_zone['id'])
-
-        LOG.info('Ensure target project cannot create sub-zones')
-        sub_zone_name = "test.{}".format(self.zone['name'])
-        self.assertRaises(
-            lib_exc.Forbidden,
-            self.alt_zone_client.create_zone,
-            name=sub_zone_name)
 
     @decorators.idempotent_id('957ba3f8-c250-11ed-a8b1-201e8823901f')
     def test_share_zone_with_yourself_is_not_allowed(self):

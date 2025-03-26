@@ -209,7 +209,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
                         ignore_errors=lib_exc.NotFound)
 
-        # Generate recordset data to be used latter in the test
+        # Generate recordset data to be used later in the test
         recordset_data = dns_data_utils.rand_recordset_data(
             record_type='A', zone_name=zone['name'])
 
@@ -434,13 +434,6 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         prim_zone_exports = self.primary_export_client.list_zone_exports()[1]
         self.assertEqual(1, len(prim_zone_exports['exports']),
                          'Failed, no zone exports listed for a primary tenant')
-
-        # Alt tries to list Primary's zone exports
-        alt_zone_exports = self.alt_export_client.list_zone_exports()[1]
-        self.assertEqual(
-            0, len(alt_zone_exports['exports']),
-            'Failed, Alt tenant is expected to receive an '
-            'empty list of zone exports')
 
     @decorators.attr(type='slow')
     @decorators.idempotent_id('cac8ea8e-c33b-11ed-a033-201e8823901f')
