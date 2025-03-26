@@ -24,7 +24,7 @@ class ZonesClient(base.DnsClientV2Base):
 
     @base.handle_errors
     def create_zone(self, name=None, email=None, ttl=None, description=None,
-                    attributes=None, wait_until=False,
+                    attributes=None, wait_until=False, serial=None,
                     zone_type=const.PRIMARY_ZONE_TYPE,
                     primaries=None, params=None, project_id=None):
 
@@ -42,6 +42,8 @@ class ZonesClient(base.DnsClientV2Base):
                and the pool the user would like to place the zone in.
                This information can be used by the scheduler to place
                zones on the correct pool.
+        :param serial: A serial of the zone.
+            Default: Random Value
         :param wait_until: Block until the zone reaches the desiered status
         :param zone_type: PRIMARY or SECONDARY
             Default: PRIMARY
@@ -77,6 +79,9 @@ class ZonesClient(base.DnsClientV2Base):
                     ' for a SECONDARY zone type')
 
             zone['masters'] = primaries
+
+        if serial:
+            zone['serial'] = serial
 
         headers = None
         extra_headers = False
