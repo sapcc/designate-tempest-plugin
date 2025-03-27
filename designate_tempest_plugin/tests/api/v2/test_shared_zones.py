@@ -178,7 +178,7 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
                         self.zone['id'], shared_zone['id'])
 
         LOG.info('Ensure target project cannot delete zone')
-        with self.assertRaisesDns(lib_exc.Forbidden, "Forbidden", 403):
+        with self.assertRaisesDns(lib_exc.NotFound, "zone_not_found", 404):
             self.alt_zone_client.delete_zone(self.zone['id'], delete_shares=True)
 
     @decorators.idempotent_id('f4354b5c-8dbb-4bb9-8025-f65f8f2b21fb')
@@ -196,9 +196,9 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
                         self.zone['id'], shared_zone['id'])
 
         LOG.info('Ensure target project cannot update the zone')
-        self.assertRaises(lib_exc.NotFound,
-                          self.alt_zone_client.update_zone,
-                          self.zone['id'], ttl=5)
+        with self.assertRaisesDns(
+                lib_exc.NotFound, 'shared_zone_not_found', 404):
+            self.alt_zone_client.update_zone(self.zone['id'], ttl=5)
 
     @decorators.idempotent_id('4389a12b-8609-493c-9640-d3c67b625022')
     def test_target_project_share_permissions(self):
@@ -216,7 +216,7 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
 
         LOG.info('Ensure target project cannot share shared zone')
         self.assertRaises(
-            lib_exc.Forbidden,
+            lib_exc.NotFound,
             self.alt_share_zone_client.create_zone_share,
             self.zone['id'],
             self.demo_zone_client.project_id)

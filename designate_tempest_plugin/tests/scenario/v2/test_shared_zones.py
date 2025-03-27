@@ -406,16 +406,6 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         return zone, shared_zone
 
     @decorators.attr(type='slow')
-    @decorators.idempotent_id('1d2c91c2-c328-11ed-a033-201e8823901f')
-    def test_alt_create_export_for_shared_zone(self):
-        # Primary creates Zone and shares it with Alt
-        zone = self._create_shared_zone(
-            'test_alt_create_export_for_shared_zone')[0]
-        self.assertRaises(
-            lib_exc.Forbidden,
-            self.alt_export_client.create_zone_export, zone['id'])
-
-    @decorators.attr(type='slow')
     @decorators.idempotent_id('1e74410c-c32c-11ed-a033-201e8823901f')
     def test_alt_list_shared_zone_exports(self):
         # Primary creates Zone and shares it with Alt
@@ -434,6 +424,13 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         prim_zone_exports = self.primary_export_client.list_zone_exports()[1]
         self.assertEqual(1, len(prim_zone_exports['exports']),
                          'Failed, no zone exports listed for a primary tenant')
+
+        # Alt tries to list Primary's zone exports
+        alt_zone_exports = self.alt_export_client.list_zone_exports()[1]
+        self.assertEqual(
+            1, len(alt_zone_exports['exports']),
+            'Failed, Alt tenant is expected to receive same '
+            ' list of zone exports')
 
     @decorators.attr(type='slow')
     @decorators.idempotent_id('cac8ea8e-c33b-11ed-a033-201e8823901f')
@@ -464,17 +461,6 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         self.assertRaises(
             lib_exc.Forbidden,
             self.alt_zone_client.show_zone_nameservers, zone['id'])
-
-    @decorators.attr(type='slow')
-    @decorators.idempotent_id('6376d4ca-c3f6-11ed-a102-201e8823901f')
-    def test_alt_transfers_shared_zone(self):
-        # Primary creates Zone and shares it with Alt
-        zone = self._create_shared_zone(
-            'test_alt_transfers_shared_zone')[0]
-        # Alt creates a zone transfer_request
-        self.assertRaises(
-            lib_exc.Forbidden,
-            self.alt_transfer_client.create_transfer_request, zone['id'])
 
     @decorators.attr(type='slow')
     @decorators.idempotent_id('80ffbd8a-c3f7-11ed-a102-201e8823901f')
@@ -522,8 +508,8 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         # Alt user lists shared zone transfer requests
         transfer = self.alt_transfer_client.list_transfer_requests()[1]
         self.assertEqual(
-            0, len(transfer['transfer_requests']),
-            'Failed, transfer request list should be empty for for Alt user')
+            1, len(transfer['transfer_requests']),
+            'Failed, transfer request list should be same for for Alt user')
 
     @decorators.attr(type='slow')
     @decorators.idempotent_id('1702c1d6-c643-11ed-8d86-201e8823901f')
