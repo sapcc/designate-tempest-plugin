@@ -426,10 +426,12 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
                          'Failed, no zone exports listed for a primary tenant')
 
         # Alt tries to list Primary's zone exports
-        alt_zone_exports = self.alt_export_client.list_zone_exports()[1]
+        # Add filter with zone id
+        params = {"zone_id": zone['id']}
+        alt_zone_exports = self.alt_export_client.list_zone_exports(params=params)[1]
         self.assertEqual(
-            1, len(alt_zone_exports['exports']),
-            'Failed, Alt tenant is expected to receive same '
+            0, len(alt_zone_exports['exports']),
+            'Failed, Alt tenant is expected to receive empty '
             ' list of zone exports')
 
     @decorators.attr(type='slow')
@@ -508,7 +510,7 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         # Alt user lists shared zone transfer requests
         transfer = self.alt_transfer_client.list_transfer_requests()[1]
         self.assertEqual(
-            1, len(transfer['transfer_requests']),
+            0, len(transfer['transfer_requests']),
             'Failed, transfer request list should be same for for Alt user')
 
     @decorators.attr(type='slow')
