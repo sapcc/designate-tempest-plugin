@@ -197,7 +197,7 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
 
         LOG.info('Ensure target project cannot update the zone')
         with self.assertRaisesDns(
-                lib_exc.NotFound, 'shared_zone_not_found', 404):
+                lib_exc.NotFound, 'zone_not_found', 404):
             self.alt_zone_client.update_zone(self.zone['id'], ttl=5)
 
     @decorators.idempotent_id('4389a12b-8609-493c-9640-d3c67b625022')
