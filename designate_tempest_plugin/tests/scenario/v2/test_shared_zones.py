@@ -460,9 +460,8 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         # Primary creates Zone and shares it with Alt
         zone = self._create_shared_zone(
             'test_alt_shows_shared_zones_nameservers')[0]
-        self.assertRaises(
-            lib_exc.Forbidden,
-            self.alt_zone_client.show_zone_nameservers, zone['id'])
+        nameservers = self.alt_zone_client.show_zone_nameservers(zone['id'])[1]
+        self.assertTrue(nameservers)
 
     @decorators.attr(type='slow')
     @decorators.idempotent_id('80ffbd8a-c3f7-11ed-a102-201e8823901f')
