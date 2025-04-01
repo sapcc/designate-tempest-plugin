@@ -193,7 +193,9 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
         shared_zone = self.share_zone_client.create_zone_share(
             zone['id'], self.alt_zone_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
-                        self.zone['id'], shared_zone['id'])
+                        self.zone['id'], shared_zone['id'],
+                        ignore_errors=lib_exc.NotFound,
+                        )
 
         LOG.info('Ensure target project cannot update the zone')
         with self.assertRaisesDns(
