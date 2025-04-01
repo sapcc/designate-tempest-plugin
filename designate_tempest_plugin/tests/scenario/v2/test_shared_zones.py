@@ -332,10 +332,10 @@ class SharedZonesTest(base.BaseDnsV2Test):
                         ignore_errors=lib_exc.NotFound)
 
         # Share the zone with the alt credential
-        shared_zone = self.share_zone_client.create_zone_share(
+        shared_zone_alt = self.share_zone_client.create_zone_share(
             zone['id'], self.alt_rec_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
-                        zone['id'], shared_zone['id'])
+                        zone['id'], shared_zone_alt['id'])
 
         # Check that the alt user can create a recordset on the shared zone
         recordset_data = dns_data_utils.rand_recordset_data(
@@ -346,6 +346,8 @@ class SharedZonesTest(base.BaseDnsV2Test):
             zone['id'], recordset['id'], ignore_errors=lib_exc.NotFound)
 
         # Share the zone with the demo credential
+        LOG.info(f"Demo client project id {self.demo_rec_client.project_id}")
+        LOG.info(f"Alt client project id {self.alt_rec_client.project_id}")
         shared_zone = self.share_zone_client.create_zone_share(
             zone['id'], self.demo_rec_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
