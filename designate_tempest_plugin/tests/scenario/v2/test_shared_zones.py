@@ -318,7 +318,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         LOG.info('Create a zone: %s', zone_name)
         zone = self.adm_zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.adm_zones_client, zone['id'],
-                        ignore_errors=lib_exc.NotFound)
+                        ignore_errors=lib_exc.NotFound, deleta_shares=True)
 
         # Share the zone with the alt credential
         shared_zone_alt = self.adm_shr_client.create_zone_share(
