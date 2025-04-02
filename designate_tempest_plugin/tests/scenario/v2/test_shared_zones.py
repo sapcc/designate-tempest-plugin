@@ -286,24 +286,24 @@ class SharedZonesTest(base.BaseDnsV2Test):
         # Create a zone to share with the alt credentialzones_client
         zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
-        zone = self.zones_client.create_zone(name=zone_name)[1]
+        zone = self.adm_zones_client.create_zone(name=zone_name)[1]
         zone_id = zone['id']
-        self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
-                        ignore_errors=lib_exc.NotFound)
+        self.addCleanup(self.wait_zone_delete, self.adm_zones_client, zone['id'],
+                        ignore_errors=lib_exc.NotFound, delete_shares=True)
 
         # Share the zone with the alt credential
-        shared_zone = self.share_zone_client.create_zone_share(
+        shared_zone_alt = self.share_zone_client.create_zone_share(
             zone['id'], self.alt_rec_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
-                        zone['id'], shared_zone['id'])
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
+                        zone['id'], shared_zone_alt['id'])
 
         # Share the zone with the demo credential
-        shared_zone = self.share_zone_client.create_zone_share(
+        shared_zone = self.adm_shr_client.create_zone_share(
             zone['id'], self.demo_rec_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone['id'])
 
-        zones = self.zones_client.list_zones()[1]['zones']
+        zones = self.adm_zones_client.list_zones()[1]['zones']
         zones_ids = [zone['id'] for zone in zones]
         self.assertEqual(
             1, zones_ids.count(zone_id),
