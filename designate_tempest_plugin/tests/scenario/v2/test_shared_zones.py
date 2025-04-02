@@ -294,8 +294,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
     @decorators.idempotent_id('c5d83684-18cb-11ee-a872-201e8823901f')
     def test_list_zones_shared_with_more_then_two_projects(self):
         # Create a zone to share with the alt credentialzones_client
-        zone_name = dns_data_utils.rand_zone_name(name='testdomain',
-                                                  suffix=self.tld_name)
+        zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
         zone = self.zones_client.create_zone(name=zone_name)[1]
         zone_id = zone['id']
