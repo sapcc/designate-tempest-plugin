@@ -348,6 +348,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         # Share the zone with the demo credential
         LOG.info(f"Demo client project id {self.demo_rec_client.project_id}")
         LOG.info(f"Alt client project id {self.alt_rec_client.project_id}")
+        LOG.info(f"Share zone client project id {self.share_zone_client.project_id}")
         shared_zone = self.share_zone_client.create_zone_share(
             zone['id'], self.demo_rec_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
