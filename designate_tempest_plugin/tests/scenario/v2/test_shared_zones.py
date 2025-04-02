@@ -39,6 +39,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
     def setup_clients(cls):
         super(SharedZonesTest, cls).setup_clients()
         cls.zones_client = cls.os_primary.zones_client
+        cls.adm_zones_client = cls.os_admin.zones_client
         cls.admin_tld_client = cls.os_admin.tld_client
         cls.adm_shr_client = cls.os_admin.shared_zones_client
         cls.share_zone_client = cls.os_primary.shared_zones_client
@@ -327,14 +328,14 @@ class SharedZonesTest(base.BaseDnsV2Test):
         zone_name = dns_data_utils.rand_zone_name(name='testdomain',
                                                   suffix=self.tld_name)
         LOG.info('Create a zone: %s', zone_name)
-        zone = self.zones_client.create_zone(name=zone_name)[1]
-        self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
+        zone = self.adm_zones_client.create_zone(name=zone_name)[1]
+        self.addCleanup(self.wait_zone_delete, self.adm_zones_client, zone['id'],
                         ignore_errors=lib_exc.NotFound)
 
         # Share the zone with the alt credential
-        shared_zone_alt = self.share_zone_client.create_zone_share(
+        shared_zone_alt = self.adm_shr_client.create_zone_share(
             zone['id'], self.alt_rec_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone_alt['id'])
 
         # Check that the alt user can create a recordset on the shared zone
@@ -351,9 +352,9 @@ class SharedZonesTest(base.BaseDnsV2Test):
         LOG.info(f"Share zone client project id {self.share_zone_client.project_id}")
         LOG.info(f"Zone client project id {self.zones_client.project_id}")
         LOG.info(f"Admin share zone client project id {self.adm_shr_client.project_id}")
-        shared_zone = self.share_zone_client.create_zone_share(
+        shared_zone = self.adm_shr_client.create_zone_share(
             zone['id'], self.demo_rec_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone['id'])
 
         # Check that the demo user can create a recordset on the shared zone
