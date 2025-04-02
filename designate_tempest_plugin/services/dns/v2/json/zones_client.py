@@ -65,8 +65,6 @@ class ZonesClient(base.DnsClientV2Base):
             if ttl != 0 else 0,
             'description': description or data_utils.rand_name('test-zone')
             if description != '' else '',
-            'attributes': attributes or {
-                'attribute_key': data_utils.rand_name('attribute_value')}
         }
         # If SECONDARY, "email" and "ttl" cannot be supplied
         if zone_type == const.SECONDARY_ZONE_TYPE:
@@ -82,6 +80,9 @@ class ZonesClient(base.DnsClientV2Base):
 
         if serial:
             zone['serial'] = serial
+            
+        if attributes:
+            zone['attributes'] = attributes
 
         headers = None
         extra_headers = False
