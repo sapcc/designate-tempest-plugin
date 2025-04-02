@@ -53,13 +53,13 @@ class SharedZonesTest(base.BaseDnsV2Test):
         super(SharedZonesTest, cls).resource_setup()
 
         # Make sure we have an allowed TLD available
-        tld_name = dns_data_utils.rand_zone_name(name='testdomain')
-        cls.tld_name = f'.{tld_name}'
-        cls.class_tld = cls.admin_tld_client.create_tld(tld_name=tld_name[:-1])
+        # tld_name = dns_data_utils.rand_zone_name(name='testdomain')
+        # cls.tld_name = f'.{tld_name}'
+        # cls.class_tld = cls.admin_tld_client.create_tld(tld_name=tld_name[:-1])
 
     @classmethod
     def resource_cleanup(cls):
-        cls.admin_tld_client.delete_tld(cls.class_tld[1]['id'])
+        # cls.admin_tld_client.delete_tld(cls.class_tld[1]['id'])
         super(SharedZonesTest, cls).resource_cleanup()
 
     @decorators.attr(type='slow')
@@ -388,7 +388,7 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         super(SharedZonesTestNegative, cls).resource_setup()
 
         # Make sure we have an allowed TLD available
-        tld_name = dns_data_utils.rand_zone_name(name='SharedZonesTest')
+        tld_name = dns_data_utils.rand_zone_name(name='SharedZonesTestNegative')
         cls.tld_name = f'.{tld_name}'
         cls.class_tld = cls.admin_tld_client.create_tld(tld_name=tld_name[:-1])
 
