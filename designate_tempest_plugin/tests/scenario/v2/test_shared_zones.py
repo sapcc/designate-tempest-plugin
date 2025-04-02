@@ -40,7 +40,6 @@ class SharedZonesTest(base.BaseDnsV2Test):
         super(SharedZonesTest, cls).setup_clients()
         cls.zones_client = cls.os_primary.zones_client
         cls.adm_zones_client = cls.os_admin.zones_client
-        cls.admin_tld_client = cls.os_admin.tld_client
         cls.adm_shr_client = cls.os_admin.shared_zones_client
         cls.share_zone_client = cls.os_primary.shared_zones_client
         cls.rec_client = cls.os_primary.recordset_client
@@ -52,22 +51,15 @@ class SharedZonesTest(base.BaseDnsV2Test):
     def resource_setup(cls):
         super(SharedZonesTest, cls).resource_setup()
 
-        # Make sure we have an allowed TLD available
-        # tld_name = dns_data_utils.rand_zone_name(name='testdomain')
-        # cls.tld_name = f'.{tld_name}'
-        # cls.class_tld = cls.admin_tld_client.create_tld(tld_name=tld_name[:-1])
-
     @classmethod
     def resource_cleanup(cls):
-        # cls.admin_tld_client.delete_tld(cls.class_tld[1]['id'])
         super(SharedZonesTest, cls).resource_cleanup()
 
     @decorators.attr(type='slow')
     @decorators.idempotent_id('b0fad45d-25ec-49b9-89a8-10b0e3c8b14c')
     def test_zone_share_CRUD_recordset(self):
         # Create a zone to share with the alt credential
-        zone_name = dns_data_utils.rand_zone_name(name='testdomain',
-                                                  suffix=self.tld_name)
+        zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
         zone = self.zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
@@ -162,8 +154,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
     @decorators.idempotent_id('de03b4d3-3ccf-4291-a920-89e2694bba22')
     def test_zone_owner_can_delete_shared_recordset(self):
         # Create a zone to share with the alt credential
-        zone_name = dns_data_utils.rand_zone_name(name='testdomain',
-                                                  suffix=self.tld_name)
+        zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
         zone = self.zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
@@ -203,8 +194,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
     def test_admin_zone_share_CRUD_recordset(self):
 
         # Create a zone to share with the alt credential
-        zone_name = dns_data_utils.rand_zone_name(name='testdomain',
-                                                  suffix=self.tld_name)
+        zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
         zone = self.zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
@@ -273,7 +263,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
     def test_share_imported_zone(self):
         # Primary user imports zone from a zone file
         zone_name = dns_data_utils.rand_zone_name(
-            name="test_share_imported_zone", suffix=self.tld_name)
+            name="test_share_imported_zone")
         zone_data = dns_data_utils.rand_zonefile_data(name=zone_name)
         zone_import = self.primary_import_client.create_zone_import(
             zonefile_data=zone_data)[1]
@@ -324,8 +314,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
     @decorators.idempotent_id('78b77c6c-18cf-11ee-a872-201e8823901f')
     def test_create_recordset_for_zone_shared_with_two_projects(self):
         # Create a zone to share with the alt credential
-        zone_name = dns_data_utils.rand_zone_name(name='testdomain',
-                                                  suffix=self.tld_name)
+        zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
         zone = self.adm_zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.adm_zones_client, zone['id'],
@@ -372,7 +361,6 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
     def setup_clients(cls):
         super(SharedZonesTestNegative, cls).setup_clients()
         cls.zones_client = cls.os_primary.zones_client
-        cls.admin_tld_client = cls.os_admin.tld_client
         cls.adm_shr_client = cls.os_admin.shared_zones_client
         cls.share_zone_client = cls.os_primary.shared_zones_client
         cls.alt_export_client = cls.os_alt.zone_exports_client
@@ -386,20 +374,14 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
     def resource_setup(cls):
         super(SharedZonesTestNegative, cls).resource_setup()
 
-        # Make sure we have an allowed TLD available
-        tld_name = dns_data_utils.rand_zone_name(name='SharedZonesTestNegative')
-        cls.tld_name = f'.{tld_name}'
-        cls.class_tld = cls.admin_tld_client.create_tld(tld_name=tld_name[:-1])
-
     @classmethod
     def resource_cleanup(cls):
-        cls.admin_tld_client.delete_tld(cls.class_tld[1]['id'])
         super(SharedZonesTestNegative, cls).resource_cleanup()
 
     def _create_shared_zone(self, zone_name):
         # Primary tenant creates zone and shares it with Alt tenant
         zone_name = dns_data_utils.rand_zone_name(
-            name=zone_name, suffix=self.tld_name)
+            name=zone_name)
         LOG.info('Create a zone: %s', zone_name)
         zone = self.zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
