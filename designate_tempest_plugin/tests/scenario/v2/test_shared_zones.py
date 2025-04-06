@@ -386,7 +386,7 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         LOG.info('Create a zone: %s', zone_name)
         zone = self.zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
-                        ignore_errors=lib_exc.NotFound)
+                        ignore_errors=lib_exc.NotFound, delete_shares=True)
         shared_zone = self.share_zone_client.create_zone_share(
             zone['id'], self.alt_export_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
@@ -507,5 +507,5 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         zone = self._create_shared_zone(
             'test_alt_lists_transfers_of_shared_zone')[0]
         self.assertRaises(
-            lib_exc.Forbidden, self.alt_zone_client.abandon_zone,
+            lib_exc.BadRequest, self.alt_zone_client.abandon_zone,
             zone['id'])
