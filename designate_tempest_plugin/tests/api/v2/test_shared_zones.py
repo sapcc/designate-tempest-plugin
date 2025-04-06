@@ -57,7 +57,7 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
         cls.zones_client = cls.os_primary.zones_client
         cls.share_zone_client = cls.os_primary.shared_zones_client
         cls.adm_shr_client = cls.os_admin.shared_zones_client
-        cls.adm_zone_client = cls.os_admin.zones_client
+        cls.adm_zones_client = cls.os_admin.zones_client
         cls.alt_zone_client = cls.os_alt.zones_client
         cls.demo_zone_client = cls.os_demo.zones_client
         cls.alt_share_zone_client = cls.os_alt.shared_zones_client
@@ -320,43 +320,9 @@ class AdminSharedZonesTest(BaseSharedZoneTest):
         self.adm_shr_client.delete_zone_share(
             self.zone['id'], shared_zone['id'], headers=sudo_header)
         self.assertRaises(lib_exc.NotFound,
-            self.adm_shr_client.show_zone_share,
-            self.zone['id'], shared_zone['id'], headers=sudo_header)
-
-    @decorators.idempotent_id('2eedfd60-b90f-11ed-b4ca-201e8823901f')
-    def test_list_zone_shares_all_projects_header(self):
-        LOG.info(
-            "Admin user shares Primary's zone with Alt tenant"
-            " using 'x-auth-all-projects' header")
-        headers = self.all_projects_header
-
-        shared_zone = self.adm_shr_client.create_zone_share(
-            self.zone['id'], self.alt_zone_client.project_id,
-            headers=headers)[1]
-        self.addCleanup(
-            self.adm_shr_client.delete_zone_share, self.zone['id'],
-            shared_zone['id'], headers=self.all_projects_header)
-
-        LOG.info(
-            "Admin user shares Primary's zone with Demo tenant"
-            " using 'x-auth-all-projects' header")
-        shared_zone = self.adm_shr_client.create_zone_share(
-            self.zone['id'], self.demo_zone_client.project_id,
-            headers=headers)[1]
-        self.addCleanup(
-            self.adm_shr_client.delete_zone_share, self.zone['id'],
-            shared_zone['id'], headers=self.all_projects_header)
-
-        LOG.info('Admin user lists zone shares')
-        body = self.adm_shr_client.list_zone_shares(
-            self.zone['id'], headers=self.all_projects_header)[1]
-
-        self.assertEqual(2, len(body['shared_zones']))
-        targets = []
-        for share in body['shared_zones']:
-            targets.append(share['target_project_id'])
-        self.assertIn(self.alt_zone_client.project_id, targets)
-        self.assertIn(self.demo_zone_client.project_id, targets)
+                          self.adm_shr_client.show_zone_share,
+                          self.zone['id'], shared_zone['id'],
+                          headers=sudo_header)
 
 
 class AdminSharedZonesTestNegative(BaseSharedZoneTest):

@@ -64,7 +64,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         LOG.info('Create a zone: %s', zone_name)
         zone = self.adm_zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.adm_zones_client, zone['id'],
-                        ignore_errors=lib_exc.NotFound)
+                        ignore_errors=lib_exc.NotFound, delete_shares=True)
 
         recordset_data = dns_data_utils.rand_recordset_data(
             record_type='A', zone_name=zone['name'])
@@ -94,7 +94,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         recordset = self.alt_rec_client.create_recordset(zone['id'],
                                                          recordset_data)[1]
         self.addCleanup(self.wait_recordset_delete, self.alt_rec_client,
-            zone['id'], recordset['id'], ignore_errors=lib_exc.NotFound)
+                        zone['id'], recordset['id'], ignore_errors=lib_exc.NotFound)
 
         # Check that the demo user cannot see the alt recordset
         self.assertRaises(lib_exc.NotFound,
@@ -243,7 +243,8 @@ class SharedZonesTest(base.BaseDnsV2Test):
 
         # Check that the alt user can update a recordset on the shared zone
         update = self.alt_rec_client.update_recordset(zone['id'],
-            recordset['id'], recordset_data)[1]
+                                                      recordset['id'],
+                                                      recordset_data)[1]
         self.assertNotEqual(recordset['ttl'], update['ttl'])
         recordset_data = {
             'ttl': dns_data_utils.rand_ttl(start=update['ttl'] + 1)
