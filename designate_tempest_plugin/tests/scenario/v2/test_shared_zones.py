@@ -41,6 +41,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         cls.zones_client = cls.os_primary.zones_client
         cls.adm_zones_client = cls.os_admin.zones_client
         cls.adm_shr_client = cls.os_admin.shared_zones_client
+        cls.adm_rec_client = cls.os_admin.recordset_client
         cls.share_zone_client = cls.os_primary.shared_zones_client
         cls.rec_client = cls.os_primary.recordset_client
         cls.alt_rec_client = cls.os_alt.recordset_client
@@ -331,7 +332,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
             record_type='A', zone_name=zone['name'])
         recordset = self.alt_rec_client.create_recordset(
             zone['id'], recordset_data)[1]
-        self.addCleanup(self.wait_recordset_delete, self.alt_rec_client,
+        self.addCleanup(self.wait_recordset_delete, self.adm_rec_client,
                         zone['id'], recordset['id'], ignore_errors=lib_exc.Forbidden)
 
         # Share the zone with the demo credential
@@ -345,7 +346,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
             record_type='A', zone_name=zone['name'])
         recordset = self.demo_rec_client.create_recordset(
             zone['id'], recordset_data)[1]
-        self.addCleanup(self.wait_recordset_delete, self.demo_rec_client,
+        self.addCleanup(self.wait_recordset_delete, self.adm_rec_client,
                         zone['id'], recordset['id'], ignore_errors=lib_exc.Forbidden)
 
 
