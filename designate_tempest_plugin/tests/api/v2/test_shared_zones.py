@@ -57,6 +57,7 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
         cls.zones_client = cls.os_primary.zones_client
         cls.share_zone_client = cls.os_primary.shared_zones_client
         cls.adm_shr_client = cls.os_admin.shared_zones_client
+        cls.adm_zone_client = cls.os_admin.zones_client
         cls.alt_zone_client = cls.os_alt.zones_client
         cls.demo_zone_client = cls.os_demo.zones_client
         cls.alt_share_zone_client = cls.os_alt.shared_zones_client
@@ -124,18 +125,22 @@ class SharedZonesTest(BaseSharedZoneTest):
 
     @decorators.idempotent_id('707bfa4f-f15b-4486-ba5c-0e5991f0f3a5')
     def test_list_zone_shares(self):
+        zone_name = dns_data_utils.rand_zone_name(name="testdomain")
+        zone = self.adm_zones_client.create_zone(name=zone_name)[1]
+        self.addCleanup(self.adm_zones_client.delete_zone,
+                        zone['id'], delete_shares=True)
         shared_zone = self.adm_shr_client.create_zone_share(
-            self.zone['id'], self.alt_zone_client.project_id)[1]
+            zone['id'], self.alt_zone_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
-                        self.zone['id'], shared_zone['id'])
+                        zone['id'], shared_zone['id'])
 
         shared_zone_demo = self.adm_shr_client.create_zone_share(
-            self.zone['id'], self.demo_zone_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
-                        self.zone['id'], shared_zone_demo['id'])
+            zone['id'], self.demo_zone_client.project_id)[1]
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
+                        zone['id'], shared_zone_demo['id'])
 
         LOG.info('List zone shares')
-        body = self.adm_shr_client.list_zone_shares(self.zone['id'])[1]
+        body = self.adm_shr_client.list_zone_shares(zone['id'])[1]
 
         self.assertEqual(2, len(body['shared_zones']))
         targets = []

@@ -62,8 +62,8 @@ class SharedZonesTest(base.BaseDnsV2Test):
         # Create a zone to share with the alt credential
         zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
-        zone = self.zones_client.create_zone(name=zone_name)[1]
-        self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
+        zone = self.adm_zones_client.create_zone(name=zone_name)[1]
+        self.addCleanup(self.wait_zone_delete, self.adm_zones_client, zone['id'],
                         ignore_errors=lib_exc.NotFound)
 
         recordset_data = dns_data_utils.rand_recordset_data(
@@ -80,9 +80,9 @@ class SharedZonesTest(base.BaseDnsV2Test):
                           zone['id'], recordset_data)
 
         # Share the zone with the alt credential
-        shared_zone = self.share_zone_client.create_zone_share(
+        shared_zone = self.adm_shr_client.create_zone_share(
             zone['id'], self.alt_rec_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone['id'])
 
         # Check that the demo user has no access to the zone after the share
@@ -108,8 +108,8 @@ class SharedZonesTest(base.BaseDnsV2Test):
         self.assertEqual(recordset['id'], show_recordset['id'])
 
         # Check that the zone owner can see the alt recordset
-        show_recordset = self.rec_client.show_recordset(zone['id'],
-                                                        recordset['id'])[1]
+        show_recordset = self.adm_rec_client.show_recordset(zone['id'],
+                                                            recordset['id'])[1]
 
         self.assertEqual(recordset['id'], show_recordset['id'])
 
@@ -124,7 +124,8 @@ class SharedZonesTest(base.BaseDnsV2Test):
 
         # Check that the alt user can update a recordset on the shared zone
         update = self.alt_rec_client.update_recordset(zone['id'],
-            recordset['id'], recordset_data)[1]
+                                                      recordset['id'],
+                                                      recordset_data)[1]
 
         self.assertNotEqual(recordset['ttl'], update['ttl'])
 
@@ -133,8 +134,9 @@ class SharedZonesTest(base.BaseDnsV2Test):
         }
 
         # Check that the zone owner can update a recordset on the shared zone
-        primary_update = self.rec_client.update_recordset(zone['id'],
-            recordset['id'], recordset_data)[1]
+        primary_update = self.adm_rec_client.update_recordset(zone['id'],
+                                                              recordset['id'],
+                                                              recordset_data)[1]
 
         self.assertNotEqual(update['ttl'], primary_update['ttl'])
 
@@ -212,7 +214,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
 
         # Admin creates shared zone for Alt using "x-auth-sudo-project-id"
         sudo_header = {
-            'x-auth-sudo-project-id': self.zones_client.project_id}
+            'x-auth-sudo-project-id': self.adm_zones_client.project_id}
         shared_zone = self.adm_shr_client.create_zone_share(
             zone['id'], self.alt_rec_client.project_id,
             headers=sudo_header)[1]
