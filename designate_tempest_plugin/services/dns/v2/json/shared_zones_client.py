@@ -59,8 +59,11 @@ class SharedZonesClient(base.DnsClientV2Base):
         :param headers: (dict): The headers to use for the request.
         :return: Zone shares list.
         """
-        return self._list_request('zones/{}/shares'.format(zone_id),
-                                  params=params, headers=headers)
+        return self._show_request(
+            'zones/{0}/shares'.format(zone_id), uuid=None,
+            params=params, headers=headers)
+        # return self._list_request('zones/{}/shares'.format(zone_id),
+        #                           params=params, headers=headers)
 
     @base.handle_errors
     def delete_zone_share(self, zone_id, zone_share_id, headers=None):
