@@ -197,8 +197,8 @@ class SharedZonesTest(base.BaseDnsV2Test):
         # Create a zone to share with the alt credential
         zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
-        zone = self.zones_client.create_zone(name=zone_name)[1]
-        self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
+        zone = self.adm_zones_client.create_zone(name=zone_name)[1]
+        self.addCleanup(self.wait_zone_delete, self.adm_zones_client, zone['id'],
                         ignore_errors=lib_exc.NotFound)
 
         # Generate recordset data to be used later in the test
@@ -232,7 +232,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         self.assertEqual(recordset['id'], show_recordset['id'])
 
         # Check that the zone owner can see the alt recordset
-        show_recordset = self.rec_client.show_recordset(
+        show_recordset = self.adm_rec_client.show_recordset(
             zone['id'], recordset['id'])[1]
         self.assertEqual(recordset['id'], show_recordset['id'])
         recordset_data = {
@@ -248,8 +248,11 @@ class SharedZonesTest(base.BaseDnsV2Test):
         }
 
         # Check that the zone owner can update a recordset on the shared zone
-        primary_update = self.rec_client.update_recordset(zone['id'],
-            recordset['id'], recordset_data)[1]
+        primary_update = self.adm_rec_client.update_recordset(
+            zone['id'],
+            recordset['id'],
+            recordset_data
+        )[1]
         self.assertNotEqual(update['ttl'], primary_update['ttl'])
 
         # Check that the alt user can delete it's recordset
@@ -293,7 +296,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
                         ignore_errors=lib_exc.NotFound, delete_shares=True)
 
         # Share the zone with the alt credential
-        shared_zone_alt = self.share_zone_client.create_zone_share(
+        shared_zone_alt = self.adm_shr_client.create_zone_share(
             zone['id'], self.alt_rec_client.project_id)[1]
         self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone_alt['id'])
