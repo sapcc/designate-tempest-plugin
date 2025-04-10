@@ -137,7 +137,7 @@ class SharedZonesTest(BaseSharedZoneTest):
                         zone['id'], delete_shares=True)
         shared_zone = self.adm_shr_client.create_zone_share(
             zone['id'], self.alt_zone_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone['id'])
 
         # List of shares by zone id
@@ -154,7 +154,7 @@ class SharedZonesTest(BaseSharedZoneTest):
                         zone['id'], delete_shares=True)
         shared_zone = self.adm_shr_client.create_zone_share(
             zone['id'], self.alt_zone_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone['id'])
 
         shared_zone_demo = self.adm_shr_client.create_zone_share(
@@ -177,7 +177,7 @@ class SharedZonesTest(BaseSharedZoneTest):
                         zone['id'], delete_shares=True)
         shared_zone = self.adm_shr_client.create_zone_share(
             zone['id'], self.alt_zone_client.project_id)[1]
-        self.addCleanup(self.share_zone_client.delete_zone_share,
+        self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone['id'])
 
         shared_zone_demo = self.adm_shr_client.create_zone_share(
