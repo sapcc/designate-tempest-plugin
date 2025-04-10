@@ -162,12 +162,16 @@ class SharedZonesTest(BaseSharedZoneTest):
         self.addCleanup(self.adm_shr_client.delete_zone_share,
                         zone['id'], shared_zone_demo['id'])
 
-        LOG.info('List zone shares')
+        LOG.info('List zone shares for project id param')
         params = {
                   'target_project_id': self.demo_zone_client.project_id
                   }
         body = self.adm_shr_client.list_shares(params=params)[1]
-        self.assertEqual(1, len(body['shared_zones']))
+        filtered_shares = [
+            share for share in body['shared_zones']
+            if share['zone_id'] == zone['id']
+        ]
+        self.assertEqual(1, len(filtered_shares))
 
     @decorators.idempotent_id('56157e02-75dc-4ca9-8a92-964ab80a374c')
     def test_list_shares_both_params(self):
