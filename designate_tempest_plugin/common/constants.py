@@ -11,16 +11,32 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-# Designate statuses strings
+
+# Designate statuses/actions strings
 PENDING = 'PENDING'
 COMPLETE = 'COMPLETE'
 ERROR = 'ERROR'
 DELETED = 'DELETED'
+DELETE = 'DELETE'
 ACTIVE = 'ACTIVE'
 INACTIVE = 'INACTIVE'
 UP = 'UP'
 CREATE = 'CREATE'
+UPDATE = 'UPDATE'
+NONE = 'NONE'
 
 # Zone types
 PRIMARY_ZONE_TYPE = 'PRIMARY'
 SECONDARY_ZONE_TYPE = 'SECONDARY'
+
+# DNS Record types
+A = 'A'
+AAAA = 'AAAA'
+ALIAS = 'ALIAS'
+CNAME = 'CNAME'
+MX = 'MX'
+NS = 'NS'
+PTR = 'PTR'
+SOA = 'SOA'
+SRV = 'SRV'
+TXT = 'TXT'

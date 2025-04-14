@@ -48,6 +48,8 @@ from designate_tempest_plugin.services.dns.v2.json.transfer_accepts_client \
 from designate_tempest_plugin.services.dns.v2.json.tsigkey_client \
     import TsigkeyClient
 from designate_tempest_plugin.services.dns.v2.json.ptr_client import PtrClient
+from designate_tempest_plugin.services.dns.v2.json.shared_zones_client import SharedZonesClient
+
 
 CONF = config.CONF
 
@@ -95,6 +97,7 @@ class ManagerV2(clients.Manager):
         self.transfer_accept_client = TransferAcceptClient(**params)
         self.tsigkey_client = TsigkeyClient(**params)
         self.ptr_client = PtrClient(**params)
+        self.shared_zones_client = SharedZonesClient(**params)
 
         self.query_client = QueryClient(
             nameservers=CONF.dns.nameservers,

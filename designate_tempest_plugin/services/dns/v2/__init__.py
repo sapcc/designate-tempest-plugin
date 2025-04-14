@@ -34,8 +34,10 @@ from designate_tempest_plugin.services.dns.v2.json.zone_imports_client import \
 from designate_tempest_plugin.services.dns.v2.json.zones_client import \
     ZonesClient
 from designate_tempest_plugin.services.dns.v2.json.ptr_client import PtrClient
+from designate_tempest_plugin.services.dns.v2.json.shared_zones_client import SharedZonesClient
+
 
 __all__ = ['BlacklistsClient', 'PoolClient', 'QuotasClient', 'RecordsetClient',
            'TldClient', 'TransferAcceptClient', 'TransferRequestClient',
            'TsigkeyClient', 'ZoneExportsClient', 'ZoneImportsClient',
-           'ZonesClient', 'PtrClient']
+           'ZonesClient', 'PtrClient', 'SharedZonesClient']

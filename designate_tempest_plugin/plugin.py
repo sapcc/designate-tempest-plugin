@@ -87,11 +87,10 @@ class DesignateTempestPlugin(plugins.TempestPlugin):
             'name': 'dns_v2',
             'service_version': 'dns.v2',
             'module_path': 'designate_tempest_plugin.services.dns.v2',
-            'client_names': ['BlacklistsClient', 'PoolClient', 'QuotasClient',
-                             'RecordsetClient', 'TldClient',
-                             'TransferAcceptClient', 'TransferRequestClient',
-                             'TsigkeyClient', 'ZoneExportsClient',
-                             'ZoneImportsClient', 'ZonesClient', 'PtrClient']
+            'client_names': ['BlacklistsClient', 'PoolClient', 'QuotasClient', 'RecordsetClient',
+                             'TldClient', 'TransferAcceptClient', 'TransferRequestClient',
+                             'TsigkeyClient', 'ZoneExportsClient', 'ZoneImportsClient',
+                             'ZonesClient', 'PtrClient', 'SharedZonesClient']
         }
         admin_params.update(dns_config)
         v2_params.update(dns_config)
