@@ -226,7 +226,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         recordset = self.alt_rec_client.create_recordset(zone['id'],
                                                          recordset_data)[1]
         self.addCleanup(self.wait_recordset_delete, self.alt_rec_client,
-            zone['id'], recordset['id'], ignore_errors=lib_exc.NotFound)
+                        zone['id'], recordset['id'], ignore_errors=lib_exc.NotFound)
 
         # Check that the alt user can see the alt recordset
         show_recordset = self.alt_rec_client.show_recordset(
