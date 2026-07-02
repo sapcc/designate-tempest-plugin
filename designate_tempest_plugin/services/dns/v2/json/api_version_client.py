@@ -1,4 +1,4 @@
-# Copyright 2016 Hewlett Packard Enterprise Development Company, L.P.
+# Copyright 2021 Red Hat.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -11,18 +11,17 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-from designate_tempest_plugin.services.dns.json import base
-
-handle_errors = base.handle_errors
+from designate_tempest_plugin.services.dns.v2.json import base
 
 
-class DnsClientV1Base(base.DnsClientBase):
-    """Base API V1 Tempest REST client for Designate API"""
-    uri_prefix = 'v1'
+class ApiVersionClient(base.DnsClientV2Base):
 
-    CREATE_STATUS_CODES = [200]
-    SHOW_STATUS_CODES = [200]
-    LIST_STATUS_CODES = [200]
-    PUT_STATUS_CODES = [200]
-    UPDATE_STATUS_CODES = []
-    DELETE_STATUS_CODES = [200]
+    @base.handle_errors
+    def list_enabled_api_versions(self):
+        """Show all enabled API versions
+
+        :return: Dictionary containing version details
+        """
+        resp, body = self.get('/')
+        self.expected_success(self.LIST_STATUS_CODES, resp.status)
+        return resp, self.deserialize(resp, body)
