@@ -13,15 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import ddt
-from tempest.lib import exceptions
+from oslo_log import log as logging
+from oslo_utils import versionutils
+
+from tempest import config
 from tempest.lib import decorators
+from tempest.lib import exceptions
 
 from designate_tempest_plugin.tests import base
 from designate_tempest_plugin.common import waiters
-from designate_tempest_plugin import data_utils
+from designate_tempest_plugin import data_utils as dns_data_utils
 
 
+CONF = config.CONF
+LOG = logging.getLogger(__name__)
 RECORDSETS_DATASET = [
     'A',
     'AAAA',
@@ -29,12 +34,36 @@ RECORDSETS_DATASET = [
     'MX',
     'SPF',
     'SRV',
+    'SSHFP',
     'TXT',
 ]
+INVALID_TXT_DATASET = {
+    "trailing_slash": {"data": "\\"},
+    "trailing_double_slash": {"data": "\\\\"},
+    "trailing_slash_after_text": {"data": "testtext\\"}}
+VALID_TXT_DATASET = {
+    "slash_with_one_trailing_space": {"data": "\"\\ \""},
+    "slash_with_many_trailing_space": {"data": "\"\\    \""},
+    "text_with_slash_and_trailing_space": {"data": "\"the txts    \""}}
+INVALID_MX_DATASET = {
+    "empty_preference": {"pref": ""},
+    "minus_zero_preference": {"pref": "-0"},
+    "minus_one_preference": {"pref": "-1"}}
+INVALID_SSHFP_DATASET = {
+    "minus_zero_algorithm": {"algo": "-0", "finger": None},
+    "minus_zero_fingerprint": {"algo": None, "finger": "-0"},
+    "minus_one_algorithm": {"algo": "-1", "finger": None},
+    "minus_one_fingerprint": {"algo": None, "finger": "-1"}}
+
+# SHA-256 (matching_type=1): exactly 32 bytes = 64 hex chars
+_TLSA_SHA256 = 'ab' * 32
+# SHA-512 (matching_type=2): exactly 64 bytes = 128 hex chars
+_TLSA_SHA512 = 'ab' * 64
 
 
-@ddt.ddt
 class RecordsetValidationTest(base.BaseDnsV2Test):
+
+    credentials = ["admin", "primary"]
 
     def setUp(self):
         super(RecordsetValidationTest, self).setUp()
@@ -50,13 +79,21 @@ class RecordsetValidationTest(base.BaseDnsV2Test):
     def setup_clients(cls):
         super(RecordsetValidationTest, cls).setup_clients()
 
-        cls.recordset_client = cls.os_primary.recordset_client
-        cls.zones_client = cls.os_primary.zones_client
+        cls.admin_tld_client = cls.os_admin.dns_v2.TldClient()
+        cls.recordset_client = cls.os_primary.dns_v2.RecordsetClient()
 
     @property
     def zone(self):
         if self._zone is None:
-            zone_data = data_utils.rand_zone_data()
+            tld_name = dns_data_utils.rand_zone_name(
+                name="recordsetvalidation")
+            self.class_tld = self.admin_tld_client.create_tld(
+                tld_name=tld_name[:-1])
+            self.addCleanup(
+                self.admin_tld_client.delete_tld, self.class_tld[1]['id'])
+            zone_name = dns_data_utils.rand_zone_name(name="TestZone",
+                                                  suffix=f'.{tld_name}')
+            zone_data = dns_data_utils.rand_zone_data(name=zone_name)
             resp, body = self.zones_client.create_zone(**zone_data)
             self._zone = body
             self.addCleanup(self.wait_zone_delete,
@@ -67,44 +104,45 @@ class RecordsetValidationTest(base.BaseDnsV2Test):
     def create_recordset(self, data):
         resp, body = self.recordset_client.create_recordset(
             self.zone['id'], data)
-
+        self.addCleanup(self.wait_recordset_delete,
+                        self.recordset_client,
+                        self.zone['id'], body['id'])
         return body
 
     @decorators.idempotent_id('c5ef87e2-cb79-4758-b968-18eef2c251df')
-    @ddt.data(*RECORDSETS_DATASET)
-    def test_create_invalid(self, rtype):
-        data = ["b0rk"]
-
-        for i in data:
-            model = data_utils.make_rand_recordset(self.zone['name'], rtype)
-            model['data'] = i
-
-            self.assertRaisesDns(
-                exceptions.BadRequest, 'invalid_object', 400,
-                self.recordset_client.create_recordset,
-                self.zone['id'], model
-            )
+    def test_create_invalid(self):
+        for rtype in RECORDSETS_DATASET:
+            data = ["b0rk"]
+            for i in data:
+                model = dns_data_utils.make_rand_recordset(
+                    self.zone['name'], rtype)
+                model['data'] = i
+                self.assertRaisesDns(
+                    exceptions.BadRequest, 'invalid_object', 400,
+                    self.recordset_client.create_recordset,
+                    self.zone['id'], model
+                )
 
     @decorators.idempotent_id('1164c826-dceb-4557-9a22-7d65c4a4f5f4')
-    @ddt.data(*RECORDSETS_DATASET)
-    def test_update_invalid(self, rtype):
-        data = ["b0rk"]
-
-        post_model = data_utils.make_rand_recordset(self.zone['name'], rtype)
-        recordset = self.create_recordset(post_model)
-
-        for i in data:
-            model = data_utils.make_rand_recordset(self.zone['name'], rtype)
-            model['data'] = i
-            self.assertRaisesDns(
-                exceptions.BadRequest, 'invalid_object', 400,
-                self.recordset_client.update_recordset,
-                self.zone['id'], recordset['id'], model
-            )
+    def test_update_invalid(self):
+        for rtype in RECORDSETS_DATASET:
+            data = ["b0rk"]
+            post_model = dns_data_utils.make_rand_recordset(
+                self.zone['name'], rtype)
+            recordset = self.create_recordset(post_model)
+            for i in data:
+                model = dns_data_utils.make_rand_recordset(
+                    self.zone['name'], rtype)
+                model['data'] = i
+                self.assertRaisesDns(
+                    exceptions.BadRequest, 'invalid_object', 400,
+                    self.recordset_client.update_recordset,
+                    self.zone['id'], recordset['id'], model
+                )
 
     @decorators.idempotent_id('61da1015-291f-43d1-a1a8-345cff12d201')
     def test_cannot_create_wildcard_NS_recordset(self):
-        model = data_utils.wildcard_ns_recordset(self.zone['name'])
+        model = dns_data_utils.wildcard_ns_recordset(self.zone['name'])
         self.assertRaisesDns(
             exceptions.BadRequest, 'invalid_object', 400,
             self.recordset_client.create_recordset, self.zone['id'], model
@@ -112,7 +150,7 @@ class RecordsetValidationTest(base.BaseDnsV2Test):
 
     @decorators.idempotent_id('92f681aa-d953-4d18-b12e-81a9149ccfd9')
     def test_cname_recordsets_cannot_have_more_than_one_record(self):
-        post_model = data_utils.rand_cname_recordset(
+        post_model = dns_data_utils.rand_cname_recordset(
             zone_name=self.zone['name'])
 
         post_model['records'] = [
@@ -127,57 +165,244 @@ class RecordsetValidationTest(base.BaseDnsV2Test):
         )
 
     @decorators.idempotent_id('22a9544b-2382-4ed2-ba12-4dbaedb8e880')
-    @ddt.file_data("invalid_txt_dataset.json")
-    def test_cannot_create_TXT_with(self, data):
-        post_model = data_utils.rand_txt_recordset(self.zone['name'], data)
-        self.assertRaisesDns(
-            exceptions.BadRequest, 'invalid_object', 400,
-            self.recordset_client.create_recordset,
-            self.zone['id'], post_model
-        )
+    def test_cannot_create_TXT_with(self):
+        for key, data in INVALID_TXT_DATASET.items():
+            LOG.info('Tested INVALID_TXT_DATASET: {}'.format(key))
+            post_model = dns_data_utils.rand_txt_recordset(
+                self.zone['name'], data['data'])
+            self.assertRaisesDns(
+                exceptions.BadRequest, 'invalid_object', 400,
+                self.recordset_client.create_recordset,
+                self.zone['id'], post_model
+            )
 
     @decorators.idempotent_id('03e4f811-0c37-4ce2-8b16-662c824f8f18')
-    @ddt.file_data("valid_txt_dataset.json")
-    def test_create_TXT_with(self, data):
-        post_model = data_utils.rand_txt_recordset(self.zone['name'], data)
-        recordset = self.create_recordset(post_model)
+    def test_create_TXT_with(self):
+        for key, data in VALID_TXT_DATASET.items():
+            LOG.info('Tested VALID_TXT_DATASET: {}'.format(key))
+            post_model = dns_data_utils.rand_txt_recordset(
+                self.zone['name'], data['data'])
+            recordset = self.create_recordset(post_model)
 
-        waiters.wait_for_recordset_status(
-            self.recordset_client, self.zone['id'], recordset['id'], 'ACTIVE')
+            waiters.wait_for_recordset_status(
+                self.recordset_client, self.zone['id'],
+                recordset['id'], 'ACTIVE')
 
     @decorators.idempotent_id('775b3db5-ec60-4dd7-85d2-f05a9c544978')
-    @ddt.file_data("valid_txt_dataset.json")
-    def test_create_SPF_with(self, data):
-        post_model = data_utils.rand_spf_recordset(self.zone['name'], data)
-        recordset = self.create_recordset(post_model)
+    def test_create_SPF_with(self):
+        for key, data in VALID_TXT_DATASET.items():
+            LOG.info('Tested VALID_TXT_DATASET: {}'.format(key))
+            post_model = dns_data_utils.rand_spf_recordset(
+                self.zone['name'], data['data'])
+            recordset = self.create_recordset(post_model)
 
-        waiters.wait_for_recordset_status(
-            self.recordset_client, self.zone['id'], recordset['id'], 'ACTIVE')
+            waiters.wait_for_recordset_status(
+                self.recordset_client, self.zone['id'],
+                recordset['id'], 'ACTIVE')
 
     @decorators.idempotent_id('7fa7783f-1624-4122-bfb2-6cfbf7a5b49b')
-    @ddt.file_data("invalid_mx_dataset.json")
-    def test_cannot_create_MX_with(self, pref):
-        post_model = data_utils.rand_mx_recordset(
-            self.zone['name'], pref=pref
-        )
+    def test_cannot_create_MX_with(self):
+        for key, pref in INVALID_MX_DATASET.items():
+            LOG.info('Tested INVALID_MX_DATASET: {}'.format(key))
 
-        self.assertRaisesDns(
-            exceptions.BadRequest, 'invalid_object', 400,
-            self.recordset_client.create_recordset,
-            self.zone['id'], post_model,
-        )
+            post_model = dns_data_utils.rand_mx_recordset(
+                self.zone['name'], pref=pref['pref']
+            )
+
+            self.assertRaisesDns(
+                exceptions.BadRequest, 'invalid_object', 400,
+                self.recordset_client.create_recordset,
+                self.zone['id'], post_model,
+            )
 
     @decorators.idempotent_id('3016f998-4e4a-4712-b15a-4e8dfbc5a60b')
-    @ddt.data("invalid_sshfp_dataset.json")
-    def test_cannot_create_SSHFP_with(self, algo=None, finger=None):
-        post_model = data_utils.rand_sshfp_recordset(
-            zone_name=self.zone['name'],
-            algorithm_number=algo,
-            fingerprint_type=finger,
-        )
+    def test_cannot_create_SSHFP_with(self):
+        for key, data in INVALID_SSHFP_DATASET.items():
+            LOG.info('Tested INVALID_SSHFP_DATASET: {}'.format(key))
+
+            post_model = dns_data_utils.rand_sshfp_recordset(
+                zone_name=self.zone['name'],
+                algorithm_number=data['algo'],
+                fingerprint_type=data['finger'],
+            )
+
+            self.assertRaisesDns(
+                exceptions.BadRequest, 'invalid_object', 400,
+                self.recordset_client.create_recordset,
+                self.zone['id'], post_model,
+            )
+
+    @decorators.idempotent_id('193be0fb-ac25-44a3-ae12-f7776048c31a')
+    def test_create_SVCB_with(self):
+        if not versionutils.is_compatible('2.2', self.api_version,
+                                          same_major=False):
+            raise self.skipException(
+                'SVCB record tests require Designate API version 2.2 or '
+                'newer. Skipping test_create_SVCB_with test.')
+
+        ipv4hint = "1.2.3.4,9.8.7.6"
+        alpn = "h3,h2,http/1.1"
+        port = "888"
+        target = f"sample.{self.zone['name']}"
+        doh = '/dns-query{?dns}'
+        svcb_data_records = [f"1 {target} alpn={alpn} ipv4hint={ipv4hint}"
+                             f" port={port} dohpath={doh}"]
+        recordset_data = {
+            'name': "svcb" + "." + self.zone['name'],
+            'type': "SVCB",
+            'records': svcb_data_records,
+        }
+        recordset = self.create_recordset(recordset_data)
+        waiters.wait_for_recordset_status(
+            self.recordset_client, self.zone['id'],
+            recordset['id'], 'ACTIVE')
+
+    @decorators.idempotent_id('758c4367-88a6-4657-908e-4c0785428cf9')
+    def test_create_HTTPS_with(self):
+        if not versionutils.is_compatible('2.2', self.api_version,
+                                          same_major=False):
+            raise self.skipException(
+                'HTTPS record tests require Designate API version 2.2 or '
+                'newer. Skipping test_create_HTTPS_with test.')
+
+        ipv4hint = "1.2.3.4,9.8.7.6"
+        alpn = "h3,h2,http/1.1"
+        port = "4443"
+        target = f"sample.{self.zone['name']}"
+        https_data_records = [f"1 {target} alpn={alpn} ipv4hint={ipv4hint}"
+                              f" port={port}"]
+        recordset_data = {
+            'name': "https" + "." + self.zone['name'],
+            'type': "HTTPS",
+            'records': https_data_records,
+        }
+        recordset = self.create_recordset(recordset_data)
+        waiters.wait_for_recordset_status(
+            self.recordset_client, self.zone['id'],
+            recordset['id'], 'ACTIVE')
+
+    @decorators.idempotent_id('c1b8a6f1-7c2a-4c91-9f5d-1d2c9c1e0001')
+    def test_create_TLSA_with_sha256(self):
+        self._skip_if_tlsa_not_supported()
+
+        recordset_data = {
+            'name': "_443._tcp." + self.zone['name'],
+            'type': "TLSA",
+            'records': ["3 1 1 " + _TLSA_SHA256],
+        }
+
+        recordset = self.create_recordset(recordset_data)
+        waiters.wait_for_recordset_status(
+            self.recordset_client, self.zone['id'],
+            recordset['id'], 'ACTIVE')
+
+    @decorators.idempotent_id('e3d0a6f3-7c2a-4c91-9f5d-1d2c9c1e0003')
+    def test_create_TLSA_multiline(self):
+        self._skip_if_tlsa_not_supported()
+
+        # Use _444 to avoid name collision with test_create_TLSA_with_sha256
+        half = _TLSA_SHA256[:32]
+        other_half = _TLSA_SHA256[32:]
+        tlsa_record = [f"3 1 1 (\n            {half}\n"
+                       f"            {other_half}\n        )"]
+
+        recordset_data = {
+            'name': "_444._tcp." + self.zone['name'],
+            'type': "TLSA",
+            'records': tlsa_record,
+        }
+
+        recordset = self.create_recordset(recordset_data)
+        waiters.wait_for_recordset_status(
+            self.recordset_client, self.zone['id'],
+            recordset['id'], 'ACTIVE')
+
+    @decorators.idempotent_id('d4e1b7f2-8c3a-5d02-af6e-2e3dad2f0004')
+    def test_create_TLSA_with_sha512(self):
+        self._skip_if_tlsa_not_supported()
+
+        # Use _445 to avoid name collision
+        recordset_data = {
+            'name': "_445._tcp." + self.zone['name'],
+            'type': "TLSA",
+            'records': ["3 1 2 " + _TLSA_SHA512],
+        }
+
+        recordset = self.create_recordset(recordset_data)
+        waiters.wait_for_recordset_status(
+            self.recordset_client, self.zone['id'],
+            recordset['id'], 'ACTIVE')
+
+    @decorators.idempotent_id('f5a2c8e3-9d4b-6e13-b07f-3f4ebe3a0005')
+    def test_cannot_create_TLSA_with_wrong_certificate_length(self):
+        self._skip_if_tlsa_not_supported()
+
+        # Use _8443 to avoid name collision
+        recordset_data = {
+            'name': "_8443._tcp." + self.zone['name'],
+            'type': "TLSA",
+            # matching_type=1 but only half the required 64 hex chars
+            'records': ["3 1 1 " + _TLSA_SHA256[:32]],
+        }
 
         self.assertRaisesDns(
             exceptions.BadRequest, 'invalid_object', 400,
             self.recordset_client.create_recordset,
-            self.zone['id'], post_model,
+            self.zone['id'], recordset_data,
+        )
+
+    @decorators.idempotent_id('a6b3d9f4-0e5c-7f24-c18a-4a5fcf4b0006')
+    def test_cannot_create_TLSA_at_bare_domain(self):
+        self._skip_if_tlsa_not_supported()
+
+        recordset_data = {
+            'name': self.zone['name'],
+            'type': "TLSA",
+            'records': ["3 1 1 " + _TLSA_SHA256],
+        }
+
+        self.assertRaisesDns(
+            exceptions.BadRequest, 'bad_request', 400,
+            self.recordset_client.create_recordset,
+            self.zone['id'], recordset_data,
+        )
+
+    @decorators.idempotent_id('c8d9e0f1-2a3b-4c5d-9e0f-1a2b3c4d5e6f')
+    def test_cannot_update_TLSA_with_wrong_certificate_length(self):
+        self._skip_if_tlsa_not_supported()
+
+        # Use _993 (IMAPS) to avoid collision
+        recordset_data = {
+            'name': "_993._tcp." + self.zone['name'],
+            'type': "TLSA",
+            'records': ["3 1 1 " + _TLSA_SHA256],
+        }
+
+        recordset = self.create_recordset(recordset_data)
+        waiters.wait_for_recordset_status(
+            self.recordset_client, self.zone['id'],
+            recordset['id'], 'ACTIVE')
+
+        update_data = {'records': ["3 1 1 " + _TLSA_SHA256[:32]]}
+        self.assertRaisesDns(
+            exceptions.BadRequest, 'invalid_object', 400,
+            self.recordset_client.update_recordset,
+            self.zone['id'], recordset['id'], update_data,
+        )
+
+    @decorators.idempotent_id('e0f1a2b3-3c4d-5e6f-b02b-3c4d5e6f7a8b')
+    def test_cannot_create_TLSA_with_port_overflow(self):
+        """Port > 65535 in recordset name must be rejected per RFC 6335"""
+        self._skip_if_tlsa_not_supported()
+
+        recordset_data = {
+            'name': "_65536._tcp." + self.zone['name'],
+            'type': "TLSA",
+            'records': ["3 1 1 " + _TLSA_SHA256],
+        }
+
+        self.assertRaisesDns(
+            exceptions.BadRequest, 'bad_request', 400,
+            self.recordset_client.create_recordset,
+            self.zone['id'], recordset_data,
         )
