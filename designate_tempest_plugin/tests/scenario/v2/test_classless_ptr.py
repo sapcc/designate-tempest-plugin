@@ -30,7 +30,7 @@ CONF = config.CONF
 # delegation scenarios.
 class ClasslessPTRTest(base.BaseDnsV2Test):
 
-    credentials = ['primary', 'admin']
+    credentials = ['primary', 'admin', 'alt']
 
     @classmethod
     def setup_credentials(cls):

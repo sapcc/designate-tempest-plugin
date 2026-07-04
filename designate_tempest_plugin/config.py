@@ -65,6 +65,12 @@ DnsFeatureGroup = [
     cfg.BoolOpt('api_admin',
                 default=True,
                 help="Is the admin dns API enabled."),
+    cfg.BoolOpt('enforce_new_defaults',
+                default=False,
+                help="Does the dns service API policies enforce "
+                     "the new keystone default roles? This configuration "
+                     "value should be same as designate.conf: "
+                     "[oslo_policy].enforce_new_defaults option."),
     cfg.BoolOpt('api_v2_root_recordsets',
                 default=False,
                 help="Is the v2 root recordsets API enabled."),

@@ -91,7 +91,7 @@ class ServiceStatusAdmin(base.BaseDnsV2Test):
 
 class ServiceStatusNegative(base.BaseDnsV2Test):
 
-    credentials = ["primary"]
+    credentials = ["primary", "alt"]
 
     @classmethod
     def setup_credentials(cls):
