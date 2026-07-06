@@ -15,12 +15,6 @@ from tempest import clients
 from tempest import config
 from tempest.lib import auth
 
-from designate_tempest_plugin.services.dns.v1.json.domains_client import \
-    DomainsClient
-from designate_tempest_plugin.services.dns.v1.json.records_client import \
-    RecordsClient
-from designate_tempest_plugin.services.dns.v1.json.servers_client import \
-    ServersClient
 from designate_tempest_plugin.services.dns.v2.json.zones_client import \
     ZonesClient
 from designate_tempest_plugin.services.dns.v2.json.zone_imports_client import \
@@ -48,34 +42,12 @@ from designate_tempest_plugin.services.dns.v2.json.transfer_accepts_client \
 from designate_tempest_plugin.services.dns.v2.json.tsigkey_client \
     import TsigkeyClient
 from designate_tempest_plugin.services.dns.v2.json.ptr_client import PtrClient
-from designate_tempest_plugin.services.dns.v2.json.shared_zones_client import SharedZonesClient
-
+from designate_tempest_plugin.services.dns.v2.json.shared_zones_client import \
+    SharedZonesClient
+from designate_tempest_plugin.services.dns.v2.json.shared_pool_client import \
+    SharedPoolClient
 
 CONF = config.CONF
-
-
-class ManagerV1(clients.Manager):
-
-    def __init__(self, credentials=None):
-        super(ManagerV1, self).__init__(credentials)
-        self._init_clients(self._get_params())
-
-    def _init_clients(self, params):
-        self.domains_client = DomainsClient(**params)
-        self.records_client = RecordsClient(**params)
-        self.servers_client = ServersClient(**params)
-
-    def _get_params(self):
-        params = dict(self.default_params)
-        params.update({
-            'auth_provider': self.auth_provider,
-            'service': CONF.dns.catalog_type,
-            'region': CONF.identity.region,
-            'endpoint_type': CONF.dns.endpoint_type,
-            'build_interval': CONF.dns.build_interval,
-            'build_timeout': CONF.dns.build_timeout
-        })
-        return params
 
 
 class ManagerV2(clients.Manager):
@@ -98,6 +70,7 @@ class ManagerV2(clients.Manager):
         self.tsigkey_client = TsigkeyClient(**params)
         self.ptr_client = PtrClient(**params)
         self.shared_zones_client = SharedZonesClient(**params)
+        self.shared_pool_client = SharedPoolClient(**params)
 
         self.query_client = QueryClient(
             nameservers=CONF.dns.nameservers,

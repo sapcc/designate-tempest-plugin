@@ -27,7 +27,7 @@ CONF = config.CONF
 
 class QuotasV2Test(base.BaseDnsV2Test):
 
-    credentials = ['primary', 'admin', 'alt']
+    credentials = ['primary', 'admin']
 
     @classmethod
     def setup_credentials(cls):

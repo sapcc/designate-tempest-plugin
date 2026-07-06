@@ -11,12 +11,14 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import six
 from tempest import test
 from tempest import config
 from tempest.lib.common.utils import test_utils as utils
 
+from designate_tempest_plugin.services.dns.query.query_client import (
+    QueryClient)
 from designate_tempest_plugin import clients
+from designate_tempest_plugin.tests import rbac_utils
 
 
 CONF = config.CONF
@@ -54,7 +56,7 @@ class AssertRaisesDns(test.BaseTestCase):
         return False
 
 
-class BaseDnsTest(test.BaseTestCase):
+class BaseDnsTest(rbac_utils.RBACTestsMixin, test.BaseTestCase):
     """Base class for DNS tests."""
 
     # NOTE(andreaf) credentials holds a list of the credentials to be allocated
@@ -63,9 +65,22 @@ class BaseDnsTest(test.BaseTestCase):
     # rest the actual roles.
     # NOTE(kiall) primary will result in a manager @ cls.os_primary, alt will
     # have cls.os_alt, and admin will have cls.os_admin.
-    # NOTE(kiall) We should default to only primary, and request additional
-    # credentials in the tests that require them.
+    # NOTE(johnsom) We will allocate most credentials here so that each test
+    # can test for allowed and disallowed RBAC policies.
     credentials = ['primary']
+    if CONF.dns_feature_enabled.enforce_new_defaults:
+        credentials.extend(['project_member', 'project_reader'])
+
+    # A tuple of credentials that will be allocated by tempest using the
+    # 'credentials' list above. These are used to build RBAC test lists.
+    allocated_creds = []
+    for cred in credentials:
+        if isinstance(cred, list):
+            allocated_creds.append('os_roles_' + cred[0])
+        else:
+            allocated_creds.append('os_' + cred)
+    # Tests shall not mess with the list of allocated credentials
+    allocated_credentials = tuple(allocated_creds)
 
     @classmethod
     def skip_checks(cls):
@@ -76,8 +91,33 @@ class BaseDnsTest(test.BaseTestCase):
                         % cls.__name__)
             raise cls.skipException(skip_msg)
 
+    @classmethod
+    def setup_clients(cls):
+        super(BaseDnsTest, cls).setup_clients()
+        # The Query Client is not an OpenStack client which means
+        # we should not set it up through the tempest client manager.
+        # Set it up here so all tests have access to it.
+        cls.query_client = QueryClient(
+            nameservers=CONF.dns.nameservers,
+            query_timeout=CONF.dns.query_timeout,
+            build_interval=CONF.dns.build_interval,
+            build_timeout=CONF.dns.build_timeout,
+        )
+        # Most tests need a "primary" zones client and we need it for the
+        # API version check, so create one instance here.
+        os_mgr = getattr(cls, 'os_primary', None) or getattr(cls, 'os_admin', None)
+        cls.zones_client = os_mgr.dns_v2.ZonesClient()
+
+    @classmethod
+    def resource_setup(cls):
+        """Setup resources needed by the tests."""
+        super(BaseDnsTest, cls).resource_setup()
+
+        # The credential does not matter here.
+        cls.api_version = cls.zones_client.get_max_api_version()
+
     def assertExpected(self, expected, actual, excluded_keys):
-        for key, value in six.iteritems(expected):
+        for key, value in expected.items():
             if key not in excluded_keys:
                 self.assertIn(key, actual)
                 self.assertEqual(value, actual[key], key)
@@ -138,22 +178,6 @@ class BaseDnsTest(test.BaseTestCase):
             self, recordset_client, zone_id, recordset_id):
         return utils.call_and_ignore_notfound_exc(
             recordset_client.show_recordset, zone_id, recordset_id) is None
-
-
-class BaseDnsV1Test(BaseDnsTest):
-    """Base class for DNS V1 API tests."""
-
-    # Use the Designate V1 Client Manager
-    client_manager = clients.ManagerV1
-
-    @classmethod
-    def skip_checks(cls):
-        super(BaseDnsV1Test, cls).skip_checks()
-
-        if not CONF.dns_feature_enabled.api_v1:
-            skip_msg = ("%s skipped as designate v1 API is not available"
-                        % cls.__name__)
-            raise cls.skipException(skip_msg)
 
 
 class BaseDnsV2Test(BaseDnsTest):
