@@ -298,7 +298,7 @@ def wait_for_zone_serial(client, zone_id, serial):
     _, zone = client.show_zone(zone_id)
     start = int(time.time())
 
-    while zone['status'] != serial:
+    while zone['serial'] != serial:
         time.sleep(client.build_interval)
         _, zone = client.show_zone(zone_id)
         serial_curr = zone['serial']

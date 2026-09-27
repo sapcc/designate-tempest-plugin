@@ -47,9 +47,12 @@ class BaseSharedZoneTest(base.BaseDnsV2Test):
 
     @classmethod
     def resource_cleanup(cls):
-        cls.zones_client.delete_zone(
-            cls.zone['id'], ignore_errors=lib_exc.NotFound, delete_shares=True)
-        super(BaseSharedZoneTest, cls).resource_cleanup()
+        try:
+            cls.zones_client.delete_zone(
+                cls.zone['id'], ignore_errors=lib_exc.NotFound,
+                delete_shares=True)
+        finally:
+            super(BaseSharedZoneTest, cls).resource_cleanup()
 
     @classmethod
     def setup_clients(cls):
@@ -240,41 +243,41 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
     def test_target_project_cannot_update_zone(self):
         zone_name = dns_data_utils.rand_zone_name(name="testdomain")
         zone = self.zones_client.create_zone(name=zone_name)[1]
-        self.addCleanup(self.zones_client.delete_zone,
-                        self.zone['id'],
+        self.addCleanup(self.wait_zone_delete, self.zones_client,
+                        zone['id'],
                         ignore_errors=lib_exc.NotFound,
                         delete_shares=True)
         shared_zone = self.share_zone_client.create_zone_share(
             zone['id'], self.alt_zone_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
-                        self.zone['id'], shared_zone['id'],
+                        zone['id'], shared_zone['id'],
                         ignore_errors=lib_exc.NotFound,
                         )
 
         LOG.info('Ensure target project cannot update the zone')
         with self.assertRaisesDns(
                 lib_exc.NotFound, 'zone_not_found', 404):
-            self.alt_zone_client.update_zone(self.zone['id'], ttl=5)
+            self.alt_zone_client.update_zone(zone['id'], ttl=5)
 
     @decorators.idempotent_id('4389a12b-8609-493c-9640-d3c67b625022')
     def test_target_project_share_permissions(self):
         zone_name = dns_data_utils.rand_zone_name(name="testdomain")
         zone = self.zones_client.create_zone(name=zone_name)[1]
-        self.addCleanup(self.zones_client.delete_zone,
-                        self.zone['id'],
+        self.addCleanup(self.wait_zone_delete, self.zones_client,
+                        zone['id'],
                         ignore_errors=lib_exc.NotFound,
                         delete_shares=True)
         shared_zone = self.share_zone_client.create_zone_share(
             zone['id'], self.alt_zone_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
-                        self.zone['id'], shared_zone['id'],
+                        zone['id'], shared_zone['id'],
                         ignore_errors=lib_exc.NotFound)
 
         LOG.info('Ensure target project cannot share shared zone')
         self.assertRaises(
             lib_exc.NotFound,
             self.alt_share_zone_client.create_zone_share,
-            self.zone['id'],
+            zone['id'],
             self.demo_zone_client.project_id)
 
     @decorators.idempotent_id('957ba3f8-c250-11ed-a8b1-201e8823901f')

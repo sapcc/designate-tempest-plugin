@@ -11,6 +11,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from oslo_log import log as logging
 from tempest import test
 from tempest import config
 from tempest.lib.common.utils import test_utils as utils
@@ -22,6 +23,7 @@ from designate_tempest_plugin.tests import rbac_utils
 
 
 CONF = config.CONF
+LOG = logging.getLogger(__name__)
 
 
 class AssertRaisesDns(test.BaseTestCase):
@@ -144,11 +146,18 @@ class BaseDnsTest(rbac_utils.RBACTestsMixin, test.BaseTestCase):
 
     def wait_zone_delete(self, zone_client, zone_id, **kwargs):
         self._delete_zone(zone_client, zone_id, **kwargs)
-        utils.call_until_true(self._check_zone_deleted,
-                              CONF.dns.build_timeout,
-                              CONF.dns.build_interval,
-                              zone_client,
-                              zone_id)
+        zone_deleted = utils.call_until_true(self._check_zone_deleted,
+                                             CONF.dns.build_timeout,
+                                             CONF.dns.build_interval,
+                                             zone_client,
+                                             zone_id)
+        # NOTE: this is used as a cleanup, so a zone that is still there
+        # must not fail the test, but it has to be visible in the log.
+        if not zone_deleted:
+            LOG.warning('Zone %(id)s was not deleted within %(timeout)s '
+                        'seconds and is most likely left behind',
+                        {'id': zone_id, 'timeout': CONF.dns.build_timeout})
+        return zone_deleted
 
     def wait_recordset_delete(self, recordset_client, zone_id,
                               recordset_id, **kwargs):

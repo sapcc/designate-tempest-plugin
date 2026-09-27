@@ -79,6 +79,8 @@ class ZonesExportTest(BaseZoneExportsTest):
 
         LOG.info('Create a zone export')
         _, zone_export = self.client.create_zone_export(zone['id'])
+        self.addCleanup(self.client.delete_zone_export, zone_export['id'],
+                        ignore_errors=lib_exc.NotFound)
 
         LOG.info('Delete the zone export')
         _, body = self.client.delete_zone_export(zone_export['id'])

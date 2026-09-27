@@ -19,6 +19,8 @@ from tempest.lib import decorators
 from tempest.lib import exceptions as lib_exc
 from tempest.lib.common.utils import data_utils
 
+from tempest.lib.common.utils import test_utils
+
 from designate_tempest_plugin import data_utils as dns_data_utils
 from designate_tempest_plugin.tests import base
 
@@ -47,10 +49,16 @@ class SharedPoolsTest(base.BaseDnsV2Test):
                 'The shared pools tests require Designate API '
                 'version 2.3 or newer. Skipping.')
 
+        # NOTE: every resource gets its own cleanup as soon as it exists,
+        # so that a failure in the middle of resource_setup does not leak
+        # the resources that were created before it.
         tld_name = dns_data_utils.rand_zone_name(name='SharedPoolsTest')
         cls.tld_name = f'.{tld_name}'
         cls.class_tld = cls.admin_tld_client.create_tld(
             tld_name=tld_name[:-1])
+        cls.addClassResourceCleanup(
+            cls.admin_tld_client.delete_tld, cls.class_tld[1]['id'],
+            ignore_errors=lib_exc.NotFound)
 
         # Create a Keystone domain for domain-based tests
         cls.test_domain = cls.os_admin.identity_v3.DomainsClient(
@@ -58,11 +66,17 @@ class SharedPoolsTest(base.BaseDnsV2Test):
             name=data_utils.rand_name('shared-pool-test-domain'),
             description='Temp domain for shared pool tests',
         )['domain']
+        cls.addClassResourceCleanup(
+            test_utils.call_and_ignore_notfound_exc,
+            cls._delete_domain, cls.test_domain['id'])
 
         # Create a pool owned by the test domain
         cls.test_pool = cls.admin_pool_client.create_pool(
             pool_name=data_utils.rand_name('shared-pool-test'),
         )[1]
+        cls.addClassResourceCleanup(
+            cls.admin_pool_client.delete_pool, cls.test_pool['id'],
+            ignore_errors=lib_exc.NotFound)
         # Set domain_id on the pool via direct API (requires admin)
         # The pool is created without domain_id - used for share tests
 
@@ -71,13 +85,6 @@ class SharedPoolsTest(base.BaseDnsV2Test):
         domains_client = cls.os_admin.identity_v3.DomainsClient()
         domains_client.update_domain(domain_id, enabled=False)
         domains_client.delete_domain(domain_id)
-
-    @classmethod
-    def resource_cleanup(cls):
-        cls.admin_pool_client.delete_pool(cls.test_pool['id'])
-        cls._delete_domain(cls.test_domain['id'])
-        cls.admin_tld_client.delete_tld(cls.class_tld[1]['id'])
-        super(SharedPoolsTest, cls).resource_cleanup()
 
     @decorators.idempotent_id('a1b2c3d4-0001-4000-8000-000000000001')
     def test_create_pool_share(self):
@@ -147,6 +154,10 @@ class SharedPoolsTest(base.BaseDnsV2Test):
             self.test_pool['id'],
             target_domain_id=self.test_domain['id'],
         )[1]
+        self.addCleanup(
+            self.admin_shared_pool_client.delete_pool_share,
+            self.test_pool['id'], share['id'],
+            ignore_errors=lib_exc.NotFound)
 
         LOG.info('Delete pool share %s', share['id'])
         self.admin_shared_pool_client.delete_pool_share(

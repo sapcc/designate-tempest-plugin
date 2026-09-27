@@ -161,7 +161,7 @@ class SharedZonesTest(base.BaseDnsV2Test):
         LOG.info('Create a zone: %s', zone_name)
         zone = self.zones_client.create_zone(name=zone_name)[1]
         self.addCleanup(self.wait_zone_delete, self.zones_client, zone['id'],
-                        ignore_errors=lib_exc.NotFound)
+                        ignore_errors=lib_exc.NotFound, delete_shares=True)
 
         recordset_data = dns_data_utils.rand_recordset_data(
             record_type='A', zone_name=zone['name'])
@@ -200,8 +200,9 @@ class SharedZonesTest(base.BaseDnsV2Test):
         zone_name = dns_data_utils.rand_zone_name(name='testdomain')
         LOG.info('Create a zone: %s', zone_name)
         zone = self.adm_zones_client.create_zone(name=zone_name)[1]
-        self.addCleanup(self.wait_zone_delete, self.adm_zones_client, zone['id'],
-                        ignore_errors=lib_exc.NotFound)
+        self.addCleanup(self.wait_zone_delete, self.adm_zones_client,
+                        zone['id'], ignore_errors=lib_exc.NotFound,
+                        delete_shares=True)
 
         # Generate recordset data to be used later in the test
         recordset_data = dns_data_utils.rand_recordset_data(
@@ -265,6 +266,23 @@ class SharedZonesTest(base.BaseDnsV2Test):
                           self.alt_rec_client.show_recordset,
                           zone['id'], recordset['id'])
 
+    def _cleanup_imported_zone(self, import_client, zones_client,
+                               zone_import_id):
+        """Delete the zone that was created by a zone import, if any.
+
+        The import record and the zone it creates are two different
+        resources, deleting the import record leaves the zone behind.
+        """
+        try:
+            zone_id = import_client.show_zone_import(
+                zone_import_id)[1].get('zone_id')
+        except lib_exc.NotFound:
+            return
+        if zone_id:
+            self.wait_zone_delete(zones_client, zone_id,
+                                  ignore_errors=lib_exc.NotFound,
+                                  delete_shares=True)
+
     @decorators.attr(type='slow')
     @decorators.idempotent_id('b7dd37b8-c3ea-11ed-a102-201e8823901f')
     def test_share_imported_zone(self):
@@ -274,8 +292,15 @@ class SharedZonesTest(base.BaseDnsV2Test):
         zone_data = dns_data_utils.rand_zonefile_data(name=zone_name)
         zone_import = self.primary_import_client.create_zone_import(
             zonefile_data=zone_data)[1]
+        # NOTE: cleanups run in reverse order. The zone created by the import
+        # has to be removed while the import record still exists, because the
+        # zone ID is read from that record.
         self.addCleanup(
-            self.primary_import_client.delete_zone_import, zone_import['id'])
+            self.primary_import_client.delete_zone_import, zone_import['id'],
+            ignore_errors=lib_exc.NotFound)
+        self.addCleanup(
+            self._cleanup_imported_zone, self.primary_import_client,
+            self.zones_client, zone_import['id'])
         waiters.wait_for_zone_import_status(
             self.primary_import_client, zone_import['id'], const.COMPLETE)
 
@@ -285,7 +310,8 @@ class SharedZonesTest(base.BaseDnsV2Test):
         shared_zone = self.share_zone_client.create_zone_share(
             zone_id, self.alt_rec_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
-                        zone_id, shared_zone['id'])
+                        zone_id, shared_zone['id'],
+                        ignore_errors=lib_exc.NotFound)
 
     @decorators.attr(type='slow')
     @decorators.idempotent_id('c5d83684-18cb-11ee-a872-201e8823901f')
@@ -391,7 +417,8 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         shared_zone = self.share_zone_client.create_zone_share(
             zone['id'], self.alt_export_client.project_id)[1]
         self.addCleanup(self.share_zone_client.delete_zone_share,
-                        zone['id'], shared_zone['id'])
+                        zone['id'], shared_zone['id'],
+                        ignore_errors=lib_exc.NotFound)
         return zone, shared_zone
 
     @decorators.attr(type='slow')
@@ -409,8 +436,11 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         waiters.wait_for_zone_export_status(
             self.primary_export_client, zone_export['id'], const.COMPLETE)
 
-        # Primary lists zone exports
-        prim_zone_exports = self.primary_export_client.list_zone_exports()[1]
+        # Primary lists zone exports (filtered by the zone under test, so
+        # that leftovers of other tests cannot break the assertion)
+        params = {"zone_id": zone['id']}
+        prim_zone_exports = self.primary_export_client.list_zone_exports(
+            params=params)[1]
         self.assertEqual(1, len(prim_zone_exports['exports']),
                          'Failed, no zone exports listed for a primary tenant')
 
@@ -490,23 +520,26 @@ class SharedZonesTestNegative(base.BaseDnsV2Test):
         self.addCleanup(self.prm_transfer_client.delete_transfer_request,
                         transfer['id'])
         self.assertEqual('ACTIVE', transfer['status'])
-        transfer = self.prm_transfer_client.list_transfer_requests()[1]
-        self.assertEqual(
-            1, len(transfer['transfer_requests']),
+        prm_transfers = self.prm_transfer_client.list_transfer_requests(
+            )[1]['transfer_requests']
+        self.assertIn(
+            transfer['id'], [item['id'] for item in prm_transfers],
             'Failed, there is no transfer request listed for a primary user')
 
         # Alt user lists shared zone transfer requests
-        transfer = self.alt_transfer_client.list_transfer_requests()[1]
-        self.assertEqual(
-            0, len(transfer['transfer_requests']),
-            'Failed, transfer request list should be same for for Alt user')
+        alt_transfers = self.alt_transfer_client.list_transfer_requests(
+            )[1]['transfer_requests']
+        self.assertNotIn(
+            transfer['id'], [item['id'] for item in alt_transfers],
+            'Failed, transfer request of a shared zone should not be listed '
+            'for the Alt user')
 
     @decorators.attr(type='slow')
     @decorators.idempotent_id('1702c1d6-c643-11ed-8d86-201e8823901f')
     def test_alt_abandon_shared_zone(self):
         # Primary creates Zone and shares it with Alt
         zone = self._create_shared_zone(
-            'test_alt_lists_transfers_of_shared_zone')[0]
+            'test_alt_abandon_shared_zone')[0]
         self.assertRaises(
             lib_exc.BadRequest, self.alt_zone_client.abandon_zone,
             zone['id'])
