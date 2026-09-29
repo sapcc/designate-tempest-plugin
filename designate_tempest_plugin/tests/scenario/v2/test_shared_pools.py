@@ -181,12 +181,21 @@ class SharedPoolsTest(base.BaseDnsV2Test):
             self.test_pool['id'], share['id'])
 
         LOG.info('Attempt to create duplicate share')
-        self.assertRaises(
-            lib_exc.Conflict,
-            self.admin_shared_pool_client.create_pool_share,
-            self.test_pool['id'],
-            target_domain_id=self.test_domain['id'],
-        )
+        try:
+            duplicate = self.admin_shared_pool_client.create_pool_share(
+                self.test_pool['id'],
+                target_domain_id=self.test_domain['id'],
+            )[1]
+        except lib_exc.Conflict:
+            return
+        # NOTE: an unexpectedly created duplicate has to be removed, a left
+        # over share breaks the other tests of this class (pool['shared']).
+        self.addCleanup(
+            self.admin_shared_pool_client.delete_pool_share,
+            self.test_pool['id'], duplicate['id'],
+            ignore_errors=lib_exc.NotFound)
+        self.fail('Duplicate pool share {} was created, expected 409 '
+                  'Conflict'.format(duplicate['id']))
 
     @decorators.idempotent_id('a1b2c3d4-0001-4000-8000-000000000006')
     def test_show_nonexistent_pool_share_returns_404(self):

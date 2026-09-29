@@ -140,17 +140,21 @@ class BaseDnsTest(rbac_utils.RBACTestsMixin, test.BaseTestCase):
         with context:
             callable_(*args, **kwargs)
 
-    def _check_zone_deleted(self, zone_client, zone_id):
-        return utils.call_and_ignore_notfound_exc(zone_client.show_zone,
-                                                  zone_id) is None
+    def _check_zone_deleted(self, zone_client, zone_id, headers=None):
+        return utils.call_and_ignore_notfound_exc(
+            zone_client.show_zone, zone_id, headers=headers) is None
 
     def wait_zone_delete(self, zone_client, zone_id, **kwargs):
         self._delete_zone(zone_client, zone_id, **kwargs)
+        # NOTE: check with the same headers as the delete call: a zone of
+        # another project deleted via x-auth-sudo-project-id is invisible
+        # (404) without them and would count as deleted right away.
         zone_deleted = utils.call_until_true(self._check_zone_deleted,
                                              CONF.dns.build_timeout,
                                              CONF.dns.build_interval,
                                              zone_client,
-                                             zone_id)
+                                             zone_id,
+                                             kwargs.get('headers'))
         # NOTE: this is used as a cleanup, so a zone that is still there
         # must not fail the test, but it has to be visible in the log.
         if not zone_deleted:

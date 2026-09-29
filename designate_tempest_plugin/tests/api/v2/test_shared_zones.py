@@ -273,11 +273,17 @@ class NegativeSharedZonesTest(BaseSharedZoneTest):
                         zone['id'], shared_zone['id'],
                         ignore_errors=lib_exc.NotFound)
 
-        LOG.info('Ensure target project cannot share shared zone')
+        # NOTE(ccloud): alt holds admin-level DNS roles, so for a zone that is
+        # shared with it Designate goes on to the other share checks, and
+        # 'demo' (no roles) is allocated as the primary account, the zone
+        # owner, which gives 400 instead of 404. As in ccloud master, check
+        # the class zone, which is not shared with alt.
+        LOG.info('Ensure target project cannot share a zone it has no '
+                 'access to')
         self.assertRaises(
             lib_exc.NotFound,
             self.alt_share_zone_client.create_zone_share,
-            zone['id'],
+            self.zone['id'],
             self.demo_zone_client.project_id)
 
     @decorators.idempotent_id('957ba3f8-c250-11ed-a8b1-201e8823901f')

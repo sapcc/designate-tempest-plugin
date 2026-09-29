@@ -407,7 +407,10 @@ class RecordsetsTest(BaseRecordsetsTest):
             self.zone['id'], recordset_id)
 
         # Test RBAC with x-auth-all-projects and x-auth-sudo-project-id header
-        expected_allowed = ['os_admin']
+        # NOTE(ccloud): the primary test account holds admin-level DNS roles
+        # ('admin', 'cloud_dns_ops'), so Designate allows it both headers,
+        # the same as in test_update_recordset and test_delete_recordset.
+        expected_allowed = ['os_admin', 'os_primary']
 
         self.check_list_show_RBAC_enforcement(
             'RecordsetClient', 'show_recordset', expected_allowed, True,
@@ -1178,8 +1181,13 @@ class RecordsetOwnershipTest(BaseRecordsetsTest):
         # Note: This is an all-projects list call, so other tests running
         #       in parallel will impact the list result set. Since the default
         #       pagination limit is only 20, we set a param limit of 1000 here.
+        #       A shared cloud can hold more than 1000 recordsets and the
+        #       default sort is oldest first, so ask for the newest ones:
+        #       the recordsets created above are then on the first page.
         recordsets = self.admin_client.list_owned_recordsets(
-            headers=self.all_projects_header, params={'limit': 1000})
+            headers=self.all_projects_header,
+            params={'limit': 1000, 'sort_key': 'created_at',
+                    'sort_dir': 'desc'})
         LOG.info('Received by API recordsets are {} '.format(recordsets))
         project_ids_api = set([item['project_id'] for item in recordsets])
         for prj_id in project_ids_used:
