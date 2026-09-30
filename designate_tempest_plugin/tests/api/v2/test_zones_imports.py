@@ -16,6 +16,7 @@ from oslo_log import log as logging
 from tempest.lib import decorators
 from tempest.lib import exceptions as lib_exc
 
+from designate_tempest_plugin.common import exceptions as dns_exceptions
 from designate_tempest_plugin.common import waiters
 from designate_tempest_plugin.tests import base
 from designate_tempest_plugin.data_utils import rand_zone_name
@@ -70,11 +71,30 @@ delegation.{name} IN NS       ns1.{name}\n
 """
 
     def clean_up_resources(self, zone_import_id):
-        waiters.wait_for_zone_import_status(self.client, zone_import_id,
-                                            "COMPLETE")
-        _, zone_import = self.client.show_zone_import(zone_import_id)
-        self.client.delete_zone_import(zone_import['id'])
-        self.wait_zone_delete(self.zone_client, zone_import['zone_id'])
+        """Remove the import record and the zone that it has created.
+
+        Runs as a cleanup, so it must not raise when the import ended up in
+        ERROR or was already removed by the test itself, otherwise the zone
+        is left behind.
+        """
+        zone_id = None
+        try:
+            waiters.wait_for_zone_import_status(self.client, zone_import_id,
+                                                "COMPLETE")
+        except (dns_exceptions.InvalidStatusError,
+                lib_exc.TimeoutException) as e:
+            LOG.warning('Zone import %s did not reach COMPLETE: %s',
+                        zone_import_id, e)
+        try:
+            _, zone_import = self.client.show_zone_import(zone_import_id)
+            zone_id = zone_import.get('zone_id')
+        except lib_exc.NotFound:
+            LOG.info('Zone import %s is already gone', zone_import_id)
+        self.client.delete_zone_import(zone_import_id,
+                                       ignore_errors=lib_exc.NotFound)
+        if zone_id:
+            self.wait_zone_delete(self.zone_client, zone_id,
+                                  ignore_errors=lib_exc.NotFound)
 
     @decorators.idempotent_id('2e2d907d-0609-405b-9c96-3cb2b87e3dce')
     def test_create_zone_import(self):
@@ -187,6 +207,9 @@ delegation.{zone_name} IN NS       ns1.{zone_name}\n
             force=True,
             zonefile_data=new_zonefile
         )
+        self.addCleanup(self.client.delete_zone_import,
+                        zone_import_new['id'],
+                        ignore_errors=lib_exc.NotFound)
         waiters.wait_for_zone_import_status(self.client, zone_import_new['id'],
                                             "COMPLETE")
         _, new_recordsets = self.recordset_client.list_recordset(zone_import['zone_id'])

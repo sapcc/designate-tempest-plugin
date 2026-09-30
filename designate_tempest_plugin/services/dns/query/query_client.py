@@ -14,10 +14,15 @@
 import dns
 import dns.exception
 import dns.query
+import dns.rdatatype
 import six
 from tempest import config
 
 CONF = config.CONF
+
+# Numeric codes of record types that old dnspython releases do not know by
+# name (dnspython3 1.12 has no CAA). A numeric type works with any release.
+RDATATYPE_CODES = {'CAA': 257}
 
 
 class QueryClient(object):
@@ -52,7 +57,13 @@ class SingleQueryClient(object):
     def _prepare_query(cls, zone_name, rdatatype):
         # support plain strings: "SOA", "A"
         if isinstance(rdatatype, six.string_types):
-            rdatatype = dns.rdatatype.from_text(rdatatype)
+            try:
+                rdatatype = dns.rdatatype.from_text(rdatatype)
+            except dns.rdatatype.UnknownRdatatype:
+                code = RDATATYPE_CODES.get(rdatatype.upper())
+                if code is None:
+                    raise
+                rdatatype = code
         dns_message = dns.message.make_query(zone_name, rdatatype)
         dns_message.set_opcode(dns.opcode.QUERY)
         return dns_message

@@ -12,32 +12,27 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-from designate_tempest_plugin.services.dns.v2.json.blacklists_client import \
-    BlacklistsClient
-from designate_tempest_plugin.services.dns.v2.json.pool_client import \
-    PoolClient
-from designate_tempest_plugin.services.dns.v2.json.quotas_client import \
-    QuotasClient
-from designate_tempest_plugin.services.dns.v2.json.recordset_client import \
-    RecordsetClient
-from designate_tempest_plugin.services.dns.v2.json.tld_client import TldClient
-from designate_tempest_plugin.services.dns.v2.json.transfer_accepts_client \
-    import TransferAcceptClient
-from designate_tempest_plugin.services.dns.v2.json.transfer_request_client \
-    import TransferRequestClient
-from designate_tempest_plugin.services.dns.v2.json.tsigkey_client import \
-    TsigkeyClient
-from designate_tempest_plugin.services.dns.v2.json.zone_exports_client import \
-    ZoneExportsClient
-from designate_tempest_plugin.services.dns.v2.json.zone_imports_client import \
-    ZoneImportsClient
-from designate_tempest_plugin.services.dns.v2.json.zones_client import \
-    ZonesClient
-from designate_tempest_plugin.services.dns.v2.json.ptr_client import PtrClient
-from designate_tempest_plugin.services.dns.v2.json.shared_zones_client import SharedZonesClient
+from .json.blacklists_client import BlacklistsClient
+from .json.designate_limit_client import DesignateLimitClient
+from .json.pool_client import PoolClient
+from .json.ptr_client import PtrClient
+from .json.quotas_client import QuotasClient
+from .json.recordset_client import RecordsetClient
+from .json.service_client import ServiceClient
+from .json.shared_pool_client import SharedPoolClient
+from .json.shared_zones_client import SharedZonesClient
+from .json.tld_client import TldClient
+from .json.transfer_accepts_client import TransferAcceptClient
+from .json.transfer_request_client import TransferRequestClient
+from .json.tsigkey_client import TsigkeyClient
+from .json.zones_client import ZonesClient
+from .json.zone_exports_client import ZoneExportsClient
+from .json.zone_imports_client import ZoneImportsClient
+from .json.api_version_client import ApiVersionClient
 
-
-__all__ = ['BlacklistsClient', 'PoolClient', 'QuotasClient', 'RecordsetClient',
-           'TldClient', 'TransferAcceptClient', 'TransferRequestClient',
-           'TsigkeyClient', 'ZoneExportsClient', 'ZoneImportsClient',
-           'ZonesClient', 'PtrClient', 'SharedZonesClient']
+__all__ = ['BlacklistsClient', 'DesignateLimitClient', 'PoolClient',
+           'PtrClient', 'QuotasClient', 'RecordsetClient', 'ServiceClient',
+           'SharedZonesClient', 'TldClient', 'TransferAcceptClient',
+           'TransferRequestClient', 'TsigkeyClient', 'ZonesClient',
+           'ZoneExportsClient', 'ZoneImportsClient', 'ApiVersionClient',
+           'SharedPoolClient']
